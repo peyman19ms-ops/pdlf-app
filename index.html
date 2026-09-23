@@ -1732,9 +1732,11 @@ function rebuildRoster(){
     o.nationalId=o.nationalId||""; o.sex=o.sex||""; o.bloodType=o.bloodType||""; o.phone=o.phone||"";
     return o;
   }).concat(custom.map(function(c){
+    var bk=jget("lab."+c.id+".baked.v1", {})||{};   // another build's baked records, arrived via backup restore
     return {id:c.id, fa:c.fa, en:c.en||c.fa, nationalId:c.nationalId||"", sex:c.sex||"", birth:c.birth||"",
       bloodType:c.bloodType||"", phone:c.phone||"",
-      role:c.role||{fa:"",en:""}, reports:[], pathology:[], sources:[], radiology:[], meds:[], custom:true};
+      role:c.role||{fa:"",en:""}, reports:bk.reports||[], pathology:bk.pathology||[], sources:bk.sources||[],
+      radiology:bk.radiology||[], meds:bk.meds||[], custom:true};
   }));
 }
 function saveRoster(){
@@ -1756,7 +1758,7 @@ var USER_SLICES = [
   {k:"pathology", ls:"pathology", def:[]},   {k:"customTests", ls:"customTests", def:[]},
   {k:"fuDone", ls:"fuDone", def:{}}
 ];
-var PSUFFIX = USER_SLICES.map(function(x){ return x.ls; }).concat(["backupAt"]);
+var PSUFFIX = USER_SLICES.map(function(x){ return x.ls; }).concat(["backupAt","baked.v1"]);
 var BASE_TESTS = D.tests, BASE_PANELS = D.panels;
 
 var additions = [], notes = {}, nextTest = null, radAdds = [], medAdds = [];
@@ -3920,7 +3922,14 @@ function cloneDef(d){ return JSON.parse(JSON.stringify(d)); }
 function readPatientData(pid){
   var o={}; USER_SLICES.forEach(function(x){ o[x.k]=jget("lab."+pid+"."+x.ls, cloneDef(x.def)); }); return o;
 }
-function blockOf(p){ var d=readPatientData(p.id); d.patient=identityOf(p); return d; }
+var BAKED_KEYS = ["reports","pathology","sources","radiology","meds"];
+/* baked records travel with the backup so a build without this patient (e.g. the public PWA) still gets them */
+function blockOf(p){
+  var d=readPatientData(p.id); d.patient=identityOf(p);
+  var bk={}, any=false; BAKED_KEYS.forEach(function(k){ bk[k]=p[k]||[]; if(bk[k].length) any=true; });
+  if(any) d.baked=bk;
+  return d;
+}
 function allBackupJson(){
   return JSON.stringify({ v:3, all:true, exportedAt:new Date().toISOString(), patients:PATIENTS.map(blockOf) }, null, 1);
 }
@@ -3942,6 +3951,7 @@ function applyPatientBlock(b){
     custom.push({id:id, fa:b.patient.fa, en:b.patient.en, nationalId:b.patient.nationalId||"", sex:b.patient.sex||"",
       birth:b.patient.birth||"", role:b.patient.role||{fa:"",en:""}, bloodType:b.patient.bloodType||"", phone:b.patient.phone||""});
   } else return false;
+  if(!known && b.baked) LS.set("lab."+id+".baked.v1", JSON.stringify(b.baked));
   writeSlices(id,b);
   return true;
 }
