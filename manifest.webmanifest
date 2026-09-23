@@ -1,0 +1,32 @@
+{
+ "name": "Personal Dynamic Lab File",
+ "short_name": "PDLF",
+ "lang": "fa",
+ "dir": "rtl",
+ "start_url": ".",
+ "scope": ".",
+ "display": "standalone",
+ "orientation": "portrait-primary",
+ "background_color": "#0c1316",
+ "theme_color": "#0e7c86",
+ "icons": [
+  {
+   "src": "icons/icon-192.png",
+   "sizes": "192x192",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "any"
+  },
+  {
+   "src": "icons/icon-512-maskable.png",
+   "sizes": "512x512",
+   "type": "image/png",
+   "purpose": "maskable"
+  }
+ ]
+}
