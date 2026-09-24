@@ -1472,6 +1472,43 @@ PLF.game = {LEVELS:LEVELS, level:level, trajectory:trajectory, medals:medals, qu
 })(typeof window!=="undefined"?window:globalThis);
 </script>
 <script>
+/* Merge an incoming backup block into a patient's local data slices. Pure.
+   Incoming wins on conflicts (the pusher is the source of truth); nothing local is dropped.
+   ponytail: deletions do not propagate (a record removed on the PC stays on the phone); add tombstones if that matters. */
+(function(root){
+var PLF = root.PLF = root.PLF || {};
+function byKey(local, inc, keyOf){
+  var out=[], idx={};
+  (local||[]).concat(inc||[]).forEach(function(x){
+    if(x==null) return;
+    var k=keyOf(x);
+    if(k in idx) out[idx[k]]=x; else { idx[k]=out.length; out.push(x); }
+  });
+  return out;
+}
+function idOrJson(x){ return x.id ? "id:"+x.id : "j:"+JSON.stringify(x); }
+var RULES = {
+  additions:   function(l,i){ return byKey(l,i,function(a){ return a.key+"|"+a.g; }); },
+  customTests: function(l,i){ return byKey(l,i,function(c){ return c.key; }); },
+  notes:       function(l,i){ var o={},k; for(k in l||{}) o[k]=l[k]; for(k in i||{}) o[k]=i[k]; return o; },
+  history:     function(l,i){ return i ? i : (l||""); },
+  nextTest:    function(l,i){ return i!=null ? i : (l==null?null:l); }
+};
+RULES.fuDone = RULES.notes;
+function block(local, incoming){
+  var out={}, k;
+  for(k in local||{}) out[k]=local[k];
+  for(k in incoming||{}){
+    if(k==="patient"||k==="baked") continue;
+    var rule = RULES[k] || (Array.isArray(incoming[k]) ? function(l,i){ return byKey(l,i,idOrJson); } : null);
+    out[k] = rule ? rule(out[k], incoming[k]) : incoming[k];
+  }
+  return out;
+}
+PLF.merge = {block:block};
+})(typeof window!=="undefined"?window:globalThis);
+</script>
+<script>
 /* Map a MedicalFile export ({v:1, slices:{...}}) into PDLF records. Pure. Labs come back as raw
    analytes; the UI matches them against the catalog / creates custom tests. */
 (function(root){
@@ -4165,6 +4202,51 @@ document.getElementById("bk-mf-in").onchange=function(){
   r.readAsText(f);
 };
 
+/* ================= Android inbox (pushed from the home PC over ADB) =================
+   tools/phones.py drops backup JSON files into the app's own storage:
+   /sdcard/Android/data/ir.arin.labchart/files/inbox/*.json   (Capacitor directory "EXTERNAL")
+   On launch and on every resume they are MERGED into local data (PLF.merge — nothing entered on
+   the phone is lost), then deleted. */
+function inboxApply(d){
+  var blocks = d && d.all && Array.isArray(d.patients) ? d.patients : (d && (d.patient||d.pid) ? [d] : []);
+  var n=0;
+  blocks.forEach(function(b){
+    var id=(b.patient&&b.patient.id)||b.pid; if(!id) return;
+    var p=null; PATIENTS.forEach(function(x){ if(x.id===id) p=x; });
+    var m=PLF.merge.block(readPatientData(id), b);
+    m.patient=b.patient||(p&&identityOf(p)); m.baked=b.baked;
+    if(m.patient && applyPatientBlock(m)) n++;
+  });
+  if(!n) return 0;
+  saveRoster();
+  usePatient(pidValid(PID)?PID:PATIENTS[0].id);
+  S=buildReports(); fillTestSelect(); renderAll();
+  return n;
+}
+function inboxCheck(){
+  if(!hasFs()) return;
+  var Fs=window.Capacitor.Plugins.Filesystem, dir="EXTERNAL", total=0;
+  Fs.mkdir({path:"inbox", directory:dir, recursive:true}).catch(function(){})
+  .then(function(){ return Fs.readdir({path:"inbox", directory:dir}); })
+  .then(function(r){
+    var names=(r.files||[]).map(function(f){ return typeof f==="string"?f:f.name; })
+      .filter(function(n){ return /\.json$/i.test(n); }).sort();
+    return names.reduce(function(chain,name){
+      var path="inbox/"+name;
+      return chain.then(function(){ return Fs.readFile({path:path, directory:dir, encoding:"utf8"}); })
+        .then(function(f){ total+=inboxApply(JSON.parse(f.data)); })
+        .catch(function(e){ console.warn("inbox: "+name, e); })     // a bad file must not block the others
+        .then(function(){ return Fs.deleteFile({path:path, directory:dir}).catch(function(){}); });
+    }, Promise.resolve());
+  })
+  .then(function(){ if(total) toast(t("پرونده‌های جدید دریافت شد ("+total+")","New records received ("+total+")")); })
+  .catch(function(){});
+}
+if(hasFs()){
+  var _App=window.Capacitor.Plugins.App;
+  if(_App && _App.addListener) _App.addListener("resume", inboxCheck);
+}
+
 var SINGLEFILE = /*__SINGLEFILE__*/ false;
 var NATIVE_SHELL = !!(window.__TAURI__ || window.Capacitor);
 if("serviceWorker" in navigator){
@@ -4238,6 +4320,8 @@ renderAll();
 showTab(LS.get("lab.tab") || "sum");
 document.body.setAttribute("data-ok","1");
 revealShell();
+inboxCheck();
+window.INBOX_APPLY = inboxApply;   // test seam: the merge path the Android inbox uses
 
 
 window.PERSONAL_PROBE = function(){ return EMB_KEYS.length; };   // test seam: number of embedded keys
