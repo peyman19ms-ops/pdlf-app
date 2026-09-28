@@ -865,6 +865,31 @@ html[data-shell="tauri"] .score-card{background:color-mix(in srgb, var(--ground)
 
 /* value from a report whose printed range differs from the one shown */
 .rrd{font-size:.62em; color:var(--muted); margin-inline-start:1px; cursor:help}
+
+/* ===== Home BP & glucose monitoring (tab "vit") ===== */
+.vit-quick{display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap}
+.vit-sep{font-size:1.6rem; font-weight:700; color:var(--muted); padding-bottom:9px}
+input.vit-big{width:92px; font-size:1.35rem; font-weight:700; text-align:center; font-variant-numeric:tabular-nums}
+.vlist{display:flex; flex-direction:column; gap:8px; margin:14px 0 26px}
+.vrow{
+  display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:var(--radius);
+  background:var(--surface); box-shadow:var(--shadow-sm), var(--edge);
+}
+.vrow .vval{font-size:1.2rem; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap}
+.vrow .vmeta{flex:1; min-width:0; font-size:.8rem; color:var(--muted)}
+.vrow .vmeta b{color:var(--ink); font-weight:600}
+.vrow .vact{display:flex; gap:8px; flex:0 0 auto}
+.vrow .vact button{background:none; border:none; color:var(--accent-2); font-size:.78rem; cursor:pointer; padding:4px}
+.vrow .vact button.del{color:var(--hi)}
+.vbadge{padding:3px 10px; border-radius:99px; font-size:.72rem; font-weight:600; white-space:nowrap; flex:0 0 auto}
+.vbadge.ok{background:var(--surface-2); color:var(--ok)}
+.vbadge.warn{background:var(--surface-2); color:var(--accent-2)}
+.vbadge.hi{background:var(--hi-bg); color:var(--hi)}
+.vbadge.lo{background:var(--lo-bg); color:var(--lo)}
+@media (max-width:640px){
+  input.vit-big{width:72px; font-size:1.2rem}
+  .vrow{flex-wrap:wrap}
+}
 </style>
 
 <div class="titlebar" id="titlebar">
@@ -899,6 +924,7 @@ html[data-shell="tauri"] .score-card{background:color-mix(in srgb, var(--ground)
   <button class="tab" data-tab="charts" data-fa="نمودارها" data-en="Charts"></button>
   <button class="tab" data-tab="rad"    data-fa="رادیولوژی" data-en="Imaging"></button>
   <button class="tab" data-tab="meds"   data-fa="داروها" data-en="Medications"></button>
+  <button class="tab" data-tab="vit"    data-fa="فشار و قند خانگی" data-en="Home BP &amp; glucose"></button>
   <button class="tab" data-tab="path"   data-fa="پاتولوژی" data-en="Pathology"></button>
   <button class="tab" data-tab="add"    data-fa="افزودن / داده" data-en="Add / data"></button>
 </nav>
@@ -1049,6 +1075,53 @@ html[data-shell="tauri"] .score-card{background:color-mix(in srgb, var(--ground)
       <span class="hint" id="med-count" style="margin:0"></span>
     </div>
     <div id="medWrap"></div>
+  </section>
+
+  <section class="panel" id="p-vit">
+    <div class="form">
+      <h3 class="fh" id="bp-formh" data-fa="ثبت فشار خون" data-en="Log blood pressure"></h3>
+      <div class="vit-quick">
+        <div class="field"><label data-fa="سیستولیک" data-en="Systolic">‏</label>
+          <input id="bp-sys" type="number" inputmode="numeric" class="vit-big" placeholder="120"></div>
+        <span class="vit-sep">/</span>
+        <div class="field"><label data-fa="دیاستولیک" data-en="Diastolic">‏</label>
+          <input id="bp-dia" type="number" inputmode="numeric" class="vit-big" placeholder="80"></div>
+        <div class="field"><label data-fa="ضربان (اختیاری)" data-en="Pulse (optional)">‏</label>
+          <input id="bp-pulse" type="number" inputmode="numeric" class="vit-big" placeholder="72"></div>
+        <div class="field"><label data-fa="تاریخ شمسی" data-en="Jalali date">‏</label>
+          <input id="bp-j" inputmode="numeric" placeholder="1405/06/01"></div>
+      </div>
+      <div class="fwide"><label class="flbl" data-fa="یادداشت (اختیاری)" data-en="Note (optional)">‏</label>
+        <input id="bp-note"></div>
+      <div class="row">
+        <button class="btn primary" id="bp-add" data-fa="ثبت فشار خون" data-en="Log reading"></button>
+        <button class="btn" id="bp-cancel" hidden data-fa="انصراف" data-en="Cancel"></button>
+      </div>
+      <p class="hint" data-fa="دسته‌بندی بر پایهٔ راهنمای عمومی بزرگسالان (ACC/AHA) است، نه توصیهٔ درمانی شخصی."
+         data-en="Categories follow a general adult guideline (ACC/AHA), not personal medical advice."></p>
+    </div>
+    <div id="bpWrap" class="vlist"></div>
+
+    <div class="form">
+      <h3 class="fh" id="glu-formh" data-fa="ثبت قند خون (دستگاه خانگی)" data-en="Log glucose (home meter)"></h3>
+      <div class="vit-quick">
+        <div class="field"><label data-fa="قند خون (mg/dL)" data-en="Glucose (mg/dL)">‏</label>
+          <input id="glu-val" type="number" inputmode="numeric" class="vit-big" placeholder="95"></div>
+        <div class="field" style="flex:2 1 200px"><label data-fa="زمان اندازه‌گیری" data-en="When measured">‏</label>
+          <select id="glu-ctx"></select></div>
+        <div class="field"><label data-fa="تاریخ شمسی" data-en="Jalali date">‏</label>
+          <input id="glu-j" inputmode="numeric" placeholder="1405/06/01"></div>
+      </div>
+      <div class="fwide"><label class="flbl" data-fa="یادداشت (اختیاری)" data-en="Note (optional)">‏</label>
+        <input id="glu-note"></div>
+      <div class="row">
+        <button class="btn primary" id="glu-add" data-fa="ثبت قند خون" data-en="Log reading"></button>
+        <button class="btn" id="glu-cancel" hidden data-fa="انصراف" data-en="Cancel"></button>
+      </div>
+      <p class="hint" data-fa="بازه‌های هدف بر پایهٔ راهنمای عمومی ADA است، نه توصیهٔ درمانی شخصی."
+         data-en="Target ranges follow a general ADA guideline, not personal medical advice."></p>
+    </div>
+    <div id="gluWrap" class="vlist"></div>
   </section>
 
   <section class="panel" id="p-path">
@@ -1726,6 +1799,45 @@ function fmt(n){
 PLF.units = {norm:norm, list:list, alt:alt, isStd:isStd, toStd:toStd, fromStd:fromStd, fmt:fmt};
 })(typeof window!=="undefined"?window:globalThis);
 </script>
+<script>
+/* Home self-monitoring: blood pressure + glucose-meter readings entered by the patient/family.
+   Pure classification helpers, no DOM. NOT a diagnosis — general adult guideline bands only:
+   BP = ACC/AHA 2017 hypertension categories; glucose = ADA Standards of Care self-monitoring targets.
+   ctx (glucose context) matches the Persian option value stored by src/js/51-vitals.js (GLU_CTX). */
+(function(root){
+var PLF = root.PLF = root.PLF || {};
+
+function num(v){ return typeof v==="number" && !isNaN(v) ? v : null; }
+
+/* {level, fa, en} | null. level -> UI badge class: crisis/stage2/stage1="hi", elevated="warn", low="lo", normal="ok" */
+function bpCategory(sys, dia){
+  sys=num(sys); dia=num(dia); if(sys==null||dia==null) return null;
+  if(sys>180 || dia>120) return {level:"crisis",  fa:"بحران فشار خون",            en:"Hypertensive crisis"};
+  if(sys>=140 || dia>=90) return {level:"stage2", fa:"فشار خون بالا (مرحلهٔ ۲)",  en:"High (stage 2)"};
+  if(sys>=130 || dia>=80) return {level:"stage1", fa:"فشار خون بالا (مرحلهٔ ۱)",  en:"High (stage 1)"};
+  if(sys>=120 && dia<80)  return {level:"elevated", fa:"مرزی",                    en:"Elevated"};
+  if(sys<90 || dia<60)    return {level:"low",      fa:"پایین",                   en:"Low"};
+  return                         {level:"normal",   fa:"طبیعی",                   en:"Normal"};
+}
+
+/* mg/dL target bands per context: [low,high], null = no bound on that side */
+var GLU_TARGETS = {
+  "ناشتا":[80,130], "قبل از غذا":[80,130], "۲ ساعت بعد غذا":[null,180],
+  "قبل از خواب":[90,150], "تصادفی":[70,200]
+};
+/* "verylow"|"low"|"normal"|"high" | null. <70 is always flagged (hypoglycaemia), regardless of context target. */
+function glucoseFlag(ctx, val){
+  val=num(val); if(val==null) return null;
+  if(val<54) return "verylow";
+  if(val<70) return "low";
+  var band=GLU_TARGETS[ctx]||GLU_TARGETS["تصادفی"];
+  if(band[1]!=null && val>band[1]) return "high";
+  if(band[0]!=null && val<band[0]) return "low";
+  return "normal";
+}
+PLF.vitals = {bpCategory:bpCategory, glucoseFlag:glucoseFlag, GLU_TARGETS:GLU_TARGETS};
+})(typeof window!=="undefined"?window:globalThis);
+</script>
 <script>window.LAB = {"cats": [{"k": "gly", "en": "Glycemic control", "fa": "کنترل قند خون"}, {"k": "lip", "en": "Lipids", "fa": "چربی خون"}, {"k": "ren", "en": "Kidney & electrolytes", "fa": "کلیه و الکترولیت‌ها"}, {"k": "liv", "en": "Liver", "fa": "کبد"}, {"k": "iron", "en": "Iron studies", "fa": "آهن"}, {"k": "cbc", "en": "Blood count (CBC)", "fa": "شمارش خون (CBC)"}, {"k": "diff", "en": "WBC differential", "fa": "شمارش افتراقی گلبول سفید"}, {"k": "thy", "en": "Thyroid", "fa": "تیروئید"}, {"k": "horm", "en": "Hormones", "fa": "هورمون‌ها"}, {"k": "tum", "en": "Tumor markers", "fa": "نشانگرهای تومور"}, {"k": "inf", "en": "Inflammation", "fa": "التهاب"}, {"k": "coag", "en": "Coagulation", "fa": "انعقاد"}, {"k": "vit", "en": "Vitamins", "fa": "ویتامین‌ها"}, {"k": "ur", "en": "Urine", "fa": "ادرار"}, {"k": "ser", "en": "Serology & immunology", "fa": "سرولوژی و ایمنی"}, {"k": "cus", "en": "Custom tests", "fa": "آزمایش‌های سفارشی"}], "panels": [{"k": "gly", "fa": "کنترل قند خون", "en": "Glycemic control", "tests": ["hba1c", "fbs", "glu2", "glu1"]}, {"k": "lip", "fa": "پروفایل چربی", "en": "Lipid panel", "tests": ["ldl", "tg", "hdl", "chol"]}, {"k": "ren", "fa": "عملکرد کلیه", "en": "Renal function", "tests": ["cr", "bun", "ua", "urea", "ualb", "ualbcr", "ucr"]}, {"k": "elec", "fa": "الکترولیت‌ها و مواد معدنی", "en": "Electrolytes & minerals", "tests": ["na", "k", "ca", "phos", "mg"]}, {"k": "liv", "fa": "آزمایش‌های کبدی", "en": "Liver function tests", "tests": ["ast", "alt", "alp", "tbil", "dbil", "alb", "tp", "amyl"]}, {"k": "iron", "fa": "بررسی آهن", "en": "Iron studies", "tests": ["fer", "iron", "tibc", "trf"]}, {"k": "cbc", "fa": "شمارش کامل خون (CBC)", "en": "Complete blood count (CBC)", "tests": ["hb", "plt", "wbc", "rbc", "hct", "mcv", "mch", "mchc", "rdw", "esr"]}, {"k": "diff", "fa": "شمارش افتراقی گلبول سفید", "en": "WBC differential", "tests": ["neut", "lymph", "mono", "eos", "baso"]}, {"k": "coag", "fa": "انعقاد (هموستاز)", "en": "Coagulation (hemostasis)", "tests": ["pt", "inr", "ptt", "fib", "ddim"]}, {"k": "thy", "fa": "آزمایش‌های تیروئید", "en": "Thyroid function", "tests": ["tsh", "ft4", "ft3", "t4", "t3", "tpo"]}, {"k": "horm", "fa": "هورمون‌ها (غدد)", "en": "Hormones (endocrinology)", "tests": ["testo", "ftesto", "fsh", "lh", "prl", "dheas"]}, {"k": "vit", "fa": "ویتامین‌ها و ریزمغذی‌ها", "en": "Vitamins & micronutrients", "tests": ["vitd", "b12", "fol", "zn"]}, {"k": "inf", "fa": "نشانگرهای التهاب", "en": "Inflammatory markers", "tests": ["crp"]}, {"k": "tum", "fa": "نشانگرهای تومور", "en": "Tumor markers", "tests": ["psat", "psaf", "afp", "cea", "ca153", "ca199", "ca125"]}, {"k": "ser", "fa": "سرولوژی و ایمنی", "en": "Serology & immunology", "tests": ["ttg", "hbsab", "hpag"]}], "tests": {"fbs": {"cat": "gly", "en": "FBS (fasting glucose)", "fa": "قند خون ناشتا", "unit": "mg/dL", "low": 70, "high": 115, "chart": true, "note": "در برخی برگه‌ها با نام Blood Glucose و محدوده ۷۰–۱۳۵", "alts": [{"u": "mmol/L", "a": 18.016}], "refSrc": "pending"}, "glu2": {"cat": "gly", "en": "Glucose 2h post‑prandial", "fa": "قند ۲ ساعت پس از غذا", "unit": "mg/dL", "low": 90, "high": 160, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 18.016}], "refSrc": "pending"}, "glu1": {"cat": "gly", "en": "Glucose 1h post‑prandial", "fa": "قند ۱ ساعت پس از غذا", "unit": "mg/dL", "low": null, "high": 140, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 18.016}], "refSrc": "pending"}, "hba1c": {"cat": "gly", "en": "HbA1c", "fa": "هموگلوبین A1c", "unit": "%", "low": null, "high": 7, "chart": true, "note": "فرد دیابتی؛ هدف <۷، مطلوب <۶٫۵", "alts": [{"u": "mmol/mol", "a": 0.09148, "b": 2.152}], "refSrc": "pending"}, "chol": {"cat": "lip", "en": "Cholesterol (total)", "fa": "کلسترول تام", "unit": "mg/dL", "low": null, "high": 200, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 38.67}], "refSrc": "pending"}, "tg": {"cat": "lip", "en": "Triglycerides", "fa": "تری‌گلیسیرید", "unit": "mg/dL", "low": 35, "high": 200, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 88.57}], "refSrc": "pending"}, "hdl": {"cat": "lip", "en": "HDL cholesterol", "fa": "کلسترول HDL", "unit": "mg/dL", "low": 30, "high": 75, "chart": true, "note": "هرچه بالاتر بهتر؛ کمتر از ۴۰ نامطلوب", "alts": [{"u": "mmol/L", "a": 38.67}], "refSrc": "pending"}, "ldl": {"cat": "lip", "en": "LDL cholesterol", "fa": "کلسترول LDL", "unit": "mg/dL", "low": null, "high": 130, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 38.67}], "refSrc": "pending"}, "bun": {"cat": "ren", "en": "BUN (blood urea nitrogen)", "fa": "نیتروژن اوره خون", "unit": "mg/dL", "low": 6, "high": 21, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 2.801}], "refSrc": "pending"}, "urea": {"cat": "ren", "en": "Blood urea", "fa": "اوره خون", "unit": "mg/dL", "low": 13, "high": 45, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 6.006}], "refSrc": "pending"}, "cr": {"cat": "ren", "en": "Creatinine", "fa": "کراتینین", "unit": "mg/dL", "low": 0.5, "high": 1.4, "chart": true, "note": "", "alts": [{"u": "µmol/L", "a": 0.01131}], "refSrc": "pending"}, "ua": {"cat": "ren", "en": "Uric acid", "fa": "اسید اوریک", "unit": "mg/dL", "low": 3.6, "high": 8.2, "chart": true, "note": "", "alts": [{"u": "µmol/L", "a": 0.01681}, {"u": "mmol/L", "a": 16.81}], "refSrc": "pending"}, "na": {"cat": "ren", "en": "Sodium", "fa": "سدیم", "unit": "mEq/L", "low": 130, "high": 148, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 1}], "refSrc": "pending"}, "k": {"cat": "ren", "en": "Potassium", "fa": "پتاسیم", "unit": "mEq/L", "low": 3.5, "high": 5.1, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 1}], "refSrc": "pending"}, "ca": {"cat": "ren", "en": "Calcium", "fa": "کلسیم", "unit": "mg/dL", "low": 8, "high": 11, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 4.008}], "refSrc": "pending"}, "phos": {"cat": "ren", "en": "Phosphorus", "fa": "فسفر", "unit": "mg/dL", "low": 2.5, "high": 5, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 3.097}], "refSrc": "pending"}, "ualb": {"cat": "ren", "en": "Urine microalbumin (random)", "fa": "میکروآلبومین ادرار", "unit": "mg/L", "low": null, "high": 20, "chart": true, "note": "", "refSrc": "pending"}, "ualbcr": {"cat": "ren", "en": "Microalbumin / creatinine ratio", "fa": "نسبت میکروآلبومین به کراتینین", "unit": "mg/g", "low": null, "high": 24, "chart": true, "note": "<۲۴ طبیعی", "alts": [{"u": "mg/mmol", "a": 8.84}], "refSrc": "pending"}, "ucr": {"cat": "ren", "en": "Random urine creatinine", "fa": "کراتینین ادرار تصادفی", "unit": "mg/dL", "low": 20, "high": 320, "chart": false, "note": "", "alts": [{"u": "mmol/L", "a": 11.31}], "refSrc": "pending"}, "ast": {"cat": "liv", "en": "AST (SGOT)", "fa": "AST", "unit": "U/L", "low": null, "high": 37, "chart": true, "note": "", "alts": [{"u": "µkat/L", "a": 60}], "refSrc": "pending"}, "alt": {"cat": "liv", "en": "ALT (SGPT)", "fa": "ALT", "unit": "U/L", "low": null, "high": 41, "chart": true, "note": "", "alts": [{"u": "µkat/L", "a": 60}], "refSrc": "pending"}, "alp": {"cat": "liv", "en": "Alkaline phosphatase", "fa": "فسفاتاز قلیایی", "unit": "U/L", "low": 80, "high": 306, "chart": true, "note": "", "alts": [{"u": "µkat/L", "a": 60}], "refSrc": "pending"}, "tbil": {"cat": "liv", "en": "Bilirubin total", "fa": "بیلی‌روبین تام", "unit": "mg/dL", "low": 0.1, "high": 1.2, "chart": true, "note": "", "alts": [{"u": "µmol/L", "a": 0.05847}], "refSrc": "pending"}, "dbil": {"cat": "liv", "en": "Bilirubin direct", "fa": "بیلی‌روبین مستقیم", "unit": "mg/dL", "low": null, "high": 0.3, "chart": true, "note": "", "alts": [{"u": "µmol/L", "a": 0.05847}], "refSrc": "pending"}, "alb": {"cat": "liv", "en": "Albumin", "fa": "آلبومین", "unit": "g/dL", "low": 3.5, "high": 5, "chart": true, "note": "", "alts": [{"u": "g/L", "a": 0.1}], "refSrc": "pending"}, "amyl": {"cat": "liv", "en": "Amylase", "fa": "آمیلاز", "unit": "IU/L", "low": null, "high": 100, "chart": false, "note": "", "refSrc": "pending"}, "iron": {"cat": "iron", "en": "Iron", "fa": "آهن سرم", "unit": "µg/dL", "low": 60, "high": 180, "chart": true, "note": "", "alts": [{"u": "µmol/L", "a": 5.585}], "refSrc": "pending"}, "tibc": {"cat": "iron", "en": "TIBC", "fa": "ظرفیت اتصال آهن", "unit": "µg/dL", "low": 240, "high": 440, "chart": true, "note": "", "alts": [{"u": "µmol/L", "a": 5.585}], "refSrc": "pending"}, "fer": {"cat": "iron", "en": "Ferritin", "fa": "فریتین", "unit": "ng/mL", "low": 20, "high": 200, "chart": true, "note": "", "alts": [{"u": "µg/L", "a": 1}, {"u": "pmol/L", "a": 0.445}], "refSrc": "pending"}, "trf": {"cat": "iron", "en": "Transferrin", "fa": "ترانسفرین", "unit": "mg/dL", "low": 190, "high": 375, "chart": false, "note": "", "alts": [{"u": "g/L", "a": 100}], "refSrc": "pending"}, "b12": {"cat": "vit", "en": "Vitamin B12", "fa": "ویتامین B12", "unit": "pg/mL", "low": 110, "high": 800, "chart": true, "note": "", "alts": [{"u": "pmol/L", "a": 1.355}], "refSrc": "pending"}, "wbc": {"cat": "cbc", "en": "WBC", "fa": "گلبول سفید", "unit": "10³/µL", "low": 4, "high": 10, "chart": true, "note": "", "alts": [{"u": "10⁹/L", "a": 1}], "refSrc": "pending"}, "rbc": {"cat": "cbc", "en": "RBC", "fa": "گلبول قرمز", "unit": "10⁶/µL", "low": 4.5, "high": 5.5, "chart": true, "note": "", "alts": [{"u": "10¹²/L", "a": 1}], "refSrc": "pending"}, "hb": {"cat": "cbc", "en": "Hemoglobin", "fa": "هموگلوبین", "unit": "g/dL", "low": 13, "high": 17, "chart": true, "note": "", "alts": [{"u": "g/L", "a": 0.1}, {"u": "mmol/L", "a": 1.611}], "refSrc": "pending"}, "hct": {"cat": "cbc", "en": "Hematocrit", "fa": "هماتوکریت", "unit": "%", "low": 40, "high": 50, "chart": true, "note": "", "alts": [{"u": "L/L", "a": 100}], "refSrc": "pending"}, "mcv": {"cat": "cbc", "en": "MCV", "fa": "MCV", "unit": "fL", "low": 82, "high": 101, "chart": true, "note": "", "refSrc": "pending"}, "mch": {"cat": "cbc", "en": "MCH", "fa": "MCH", "unit": "pg", "low": 27, "high": 33, "chart": true, "note": "", "refSrc": "pending"}, "mchc": {"cat": "cbc", "en": "MCHC", "fa": "MCHC", "unit": "g/dL", "low": 31, "high": 36, "chart": true, "note": "", "alts": [{"u": "g/L", "a": 0.1}], "refSrc": "pending"}, "plt": {"cat": "cbc", "en": "Platelet", "fa": "پلاکت", "unit": "10³/µL", "low": 150, "high": 450, "chart": true, "note": "", "alts": [{"u": "10⁹/L", "a": 1}], "refSrc": "pending"}, "rdw": {"cat": "cbc", "en": "RDW‑CV", "fa": "RDW‑CV", "unit": "%", "low": 11.5, "high": 16.5, "chart": true, "note": "", "refSrc": "pending"}, "esr": {"cat": "cbc", "en": "ESR (1st hr)", "fa": "سرعت رسوب (ساعت اول)", "unit": "mm/h", "low": null, "high": 20, "chart": true, "note": "", "refSrc": "pending"}, "neut": {"cat": "diff", "en": "Neutrophils", "fa": "نوتروفیل", "unit": "%", "low": 40, "high": 75, "chart": true, "note": "", "refSrc": "pending"}, "lymph": {"cat": "diff", "en": "Lymphocytes", "fa": "لنفوسیت", "unit": "%", "low": 20, "high": 45, "chart": true, "note": "", "refSrc": "pending"}, "mono": {"cat": "diff", "en": "Monocytes", "fa": "مونوسیت", "unit": "%", "low": 2, "high": 10, "chart": true, "note": "", "refSrc": "pending"}, "eos": {"cat": "diff", "en": "Eosinophils", "fa": "ائوزینوفیل", "unit": "%", "low": 0, "high": 7, "chart": true, "note": "", "refSrc": "pending"}, "baso": {"cat": "diff", "en": "Basophils", "fa": "بازوفیل", "unit": "%", "low": 0, "high": 2, "chart": true, "note": "", "refSrc": "pending"}, "tsh": {"cat": "thy", "en": "TSH", "fa": "TSH", "unit": "mIU/L", "low": 0.27, "high": 5.2, "chart": true, "note": "", "alts": [{"u": "µIU/mL", "a": 1}], "refSrc": "pending"}, "t4": {"cat": "thy", "en": "T4 (total)", "fa": "T4 تام", "unit": "µg/dL", "low": 5.3, "high": 14.06, "chart": true, "note": "", "alts": [{"u": "nmol/L", "a": 0.0777}], "refSrc": "pending"}, "ft4": {"cat": "thy", "en": "Free T4", "fa": "T4 آزاد", "unit": "pmol/L", "low": 10.5, "high": 20.1, "chart": true, "note": "روش‌ها و محدوده‌های متفاوت بین برگه‌ها", "alts": [{"u": "ng/dL", "a": 12.87}], "refSrc": "pending"}, "ft3": {"cat": "thy", "en": "Free T3", "fa": "T3 آزاد", "unit": "pmol/L", "low": 3.1, "high": 6.8, "chart": true, "note": "", "alts": [{"u": "pg/mL", "a": 1.536}], "refSrc": "pending"}, "testo": {"cat": "horm", "en": "Testosterone (total)", "fa": "تستوسترون تام", "unit": "ng/mL", "low": 1.5, "high": 6.92, "chart": true, "note": "", "alts": [{"u": "ng/dL", "a": 0.01}, {"u": "nmol/L", "a": 0.2884}], "refSrc": "pending"}, "ftesto": {"cat": "horm", "en": "Free testosterone", "fa": "تستوسترون آزاد", "unit": "pg/mL", "low": 4.11, "high": 21.85, "chart": true, "note": ">۵۰ سال", "alts": [{"u": "pmol/L", "a": 0.2884}, {"u": "ng/dL", "a": 10}], "refSrc": "pending", "by": [{"sex": "F", "low": null, "high": 2.34}]}, "fsh": {"cat": "horm", "en": "FSH", "fa": "FSH", "unit": "mIU/mL", "low": 1.7, "high": 12, "chart": true, "note": "", "alts": [{"u": "IU/L", "a": 1}], "refSrc": "pending"}, "lh": {"cat": "horm", "en": "LH", "fa": "LH", "unit": "mIU/mL", "low": 1.1, "high": 25, "chart": true, "note": "", "alts": [{"u": "IU/L", "a": 1}], "refSrc": "pending"}, "prl": {"cat": "horm", "en": "Prolactin", "fa": "پرولاکتین", "unit": "ng/mL", "low": 3, "high": 25, "chart": true, "note": "", "alts": [{"u": "mIU/L", "a": 0.0472}], "refSrc": "pending"}, "psat": {"cat": "tum", "en": "PSA total", "fa": "PSA تام", "unit": "ng/mL", "low": null, "high": 4, "chart": true, "note": "", "refSrc": "pending", "sex": "M"}, "psaf": {"cat": "tum", "en": "PSA free", "fa": "PSA آزاد", "unit": "ng/mL", "low": null, "high": 2, "chart": true, "note": "", "refSrc": "pending", "sex": "M"}, "crp": {"cat": "inf", "en": "CRP", "fa": "CRP", "unit": "mg/L", "low": null, "high": 8, "chart": true, "note": "", "alts": [{"u": "mg/dL", "a": 10}], "refSrc": "pending"}, "pt": {"cat": "coag", "en": "PT", "fa": "زمان پروترومبین", "unit": "sec", "low": 11, "high": 12.8, "chart": true, "note": "محدوده کنترل بین برگه‌ها کمی متفاوت", "refSrc": "pending"}, "inr": {"cat": "coag", "en": "INR", "fa": "INR", "unit": "", "low": 1, "high": 1.2, "chart": true, "note": "", "refSrc": "pending"}, "ptt": {"cat": "coag", "en": "PTT", "fa": "PTT", "unit": "sec", "low": 25, "high": 40, "chart": true, "note": "", "refSrc": "pending"}, "vitd": {"cat": "vit", "en": "Vitamin D (25‑OH)", "fa": "ویتامین D", "unit": "ng/mL", "low": 30, "high": 100, "chart": true, "note": "<۱۰ کمبود شدید، ۱۰–۳۰ ناکافی، ۳۰–۱۰۰ کافی", "alts": [{"u": "nmol/L", "a": 0.4006}], "refSrc": "pending"}, "tp": {"cat": "liv", "en": "Total protein", "fa": "پروتئین تام", "unit": "g/dL", "low": 6.2, "high": 8.2, "chart": true, "note": "", "refSrc": "pending"}, "mg": {"cat": "ren", "en": "Magnesium", "fa": "منیزیم", "unit": "mg/dL", "low": 1.6, "high": 2.9, "chart": true, "note": "", "alts": [{"u": "mmol/L", "a": 2.431}], "refSrc": "pending"}, "zn": {"cat": "vit", "en": "Zinc", "fa": "روی (زینک)", "unit": "µg/dL", "low": 70, "high": 114, "chart": true, "note": "", "alts": [{"u": "µmol/L", "a": 6.54}], "refSrc": "pending"}, "fol": {"cat": "vit", "en": "Folic acid", "fa": "اسید فولیک", "unit": "ng/mL", "low": 4.6, "high": 18.7, "chart": true, "note": "", "alts": [{"u": "nmol/L", "a": 0.4413}], "refSrc": "pending"}, "t3": {"cat": "thy", "en": "T3 (total)", "fa": "T3 تام", "unit": "nmol/L", "low": 0.92, "high": 2.33, "chart": true, "note": "", "alts": [{"u": "ng/dL", "a": 0.01536}], "refSrc": "pending"}, "tpo": {"cat": "thy", "en": "Anti-TPO", "fa": "آنتی‌TPO", "unit": "IU/mL", "low": null, "high": 35, "chart": true, "note": "", "refSrc": "pending"}, "dheas": {"cat": "horm", "en": "DHEA-SO4", "fa": "DHEA-SO4", "unit": "µg/mL", "low": 0.03, "high": 5.88, "chart": true, "note": "محدوده به سن و جنس وابسته است", "alts": [{"u": "µg/dL", "a": 0.01}], "refSrc": "pending"}, "afp": {"cat": "tum", "en": "AFP", "fa": "AFP", "unit": "IU/mL", "low": null, "high": 5.8, "chart": true, "note": "غیرباردار", "refSrc": "pending"}, "cea": {"cat": "tum", "en": "CEA", "fa": "CEA", "unit": "ng/mL", "low": null, "high": 3.8, "chart": true, "note": "غیرسیگاری <۳٫۸؛ سیگاری <۵٫۵", "refSrc": "pending"}, "ca153": {"cat": "tum", "en": "CA 15-3", "fa": "CA 15-3", "unit": "U/mL", "low": null, "high": 25, "chart": true, "note": "", "refSrc": "pending"}, "ca199": {"cat": "tum", "en": "CA 19-9", "fa": "CA 19-9", "unit": "U/mL", "low": null, "high": 35, "chart": true, "note": "", "refSrc": "pending"}, "ca125": {"cat": "tum", "en": "CA 125", "fa": "CA 125", "unit": "U/mL", "low": null, "high": 35, "chart": true, "note": "", "refSrc": "pending"}, "ddim": {"cat": "coag", "en": "D-dimer", "fa": "دی‌دایمر", "unit": "ng/mL", "low": null, "high": 1000, "chart": true, "note": "برگهٔ ۱۴۰۵/۰۶ واحد را mg/dL چاپ کرده؛ عدد با ng/mL (FEU) جور است — بررسی شود", "refSrc": "pending"}, "fib": {"cat": "coag", "en": "Fibrinogen", "fa": "فیبرینوژن", "unit": "mg/dL", "low": 150, "high": 400, "chart": true, "note": "", "alts": [{"u": "g/L", "a": 100}], "refSrc": "pending"}, "ttg": {"cat": "ser", "en": "Anti-tTG IgA", "fa": "آنتی‌tTG IgA", "unit": "IU/mL", "low": null, "high": 20, "chart": true, "note": "", "refSrc": "pending"}, "hbsab": {"cat": "ser", "en": "HBs Ab", "fa": "آنتی‌بادی HBs", "unit": "mIU/mL", "low": 10, "high": null, "chart": true, "note": "≥۱۰ = ایمن", "refSrc": "pending"}, "hpag": {"cat": "ser", "en": "H. pylori Ag (stool)", "fa": "آنتی‌ژن هلیکوباکتر (مدفوع)", "unit": "index", "low": null, "high": 0.9, "chart": true, "note": "<۰٫۹ منفی، ۰٫۹–۱٫۱ مشکوک", "refSrc": "pending"}}, "patients": [], "activePatient": null, "adminBuild": true, "patient": {"fa": "بیمار", "en": "Patient", "role": {"fa": "", "en": ""}, "birth": ""}, "reports": [], "pathology": [], "sources": [], "radiology": [], "meds": []}</script>
 <script>
 (function(){
@@ -1766,6 +1878,13 @@ var PERSONAL = false, EMB_KEYS = [], keyIdx = 0;
     LS.set("lab.gemini.model", "gemini-flash-latest");   // pin a non-deprecating alias
   }catch(e){}
 })();
+/* fallback engine (Mistral): embedded key, else one typed in the key panel (lab.mistral.key) */
+var MKEYS = [];
+(function(){
+  var P = /*__EMBEDDED_MKEY__*/ null;
+  try{ if(P) MKEYS = P.map(function(b){ return b.map(function(s){ return atob(s.split("").reverse().join("")); }).join(""); }); }catch(e){}
+})();
+function mKey(){ return MKEYS[0] || LS.get("lab.mistral.key") || ""; }
 function nextKey(){
   if(EMB_KEYS.length<2) return false;
   keyIdx=(keyIdx+1)%EMB_KEYS.length; LS.set("lab.gemini.kidx", String(keyIdx)); return true;
@@ -1823,6 +1942,7 @@ function pk(suffix){ return "lab."+PID+"."+suffix; }
 var USER_SLICES = [
   {k:"additions", ls:"additions.v1", def:[]}, {k:"notes", ls:"notes", def:{}}, {k:"nextTest", ls:"nextTest", def:null},
   {k:"radiology", ls:"radiology", def:[]},   {k:"meds", ls:"meds", def:[]},
+  {k:"bp", ls:"bp", def:[]},                 {k:"glu", ls:"glu", def:[]},
   {k:"history", ls:"history", def:""},
   {k:"conditions", ls:"conditions", def:[]}, {k:"allergies", ls:"allergies", def:[]},
   {k:"pathology", ls:"pathology", def:[]},   {k:"customTests", ls:"customTests", def:[]},
@@ -1831,7 +1951,7 @@ var USER_SLICES = [
 var PSUFFIX = USER_SLICES.map(function(x){ return x.ls; }).concat(["backupAt","baked.v1"]);
 var BASE_TESTS = D.tests, BASE_PANELS = D.panels;
 
-var additions = [], notes = {}, nextTest = null, radAdds = [], medAdds = [];
+var additions = [], notes = {}, nextTest = null, radAdds = [], medAdds = [], bpAdds = [], gluAdds = [];
 var history_ = "", conditions = [], allergies = [], pathAdds = [], customTests = [], fuDone = {};
 function loadPatientData(){
   // one-time migration: the very first patient inherits the old un-namespaced keys
@@ -1846,6 +1966,8 @@ function loadPatientData(){
   nextTest = jget(pk("nextTest"), null);
   radAdds = jget(pk("radiology"), []); if(!Array.isArray(radAdds)) radAdds=[];
   medAdds = jget(pk("meds"), []); if(!Array.isArray(medAdds)) medAdds=[];
+  bpAdds = jget(pk("bp"), []); if(!Array.isArray(bpAdds)) bpAdds=[];
+  gluAdds = jget(pk("glu"), []); if(!Array.isArray(gluAdds)) gluAdds=[];
   history_ = jget(pk("history"), ""); if(typeof history_!=="string") history_="";
   conditions = jget(pk("conditions"), []); if(!Array.isArray(conditions)) conditions=[];
   allergies = jget(pk("allergies"), []); if(!Array.isArray(allergies)) allergies=[];
@@ -1870,6 +1992,7 @@ function applyCustomTests(){
 function saveSlice(name){
   var sl=USER_SLICES.filter(function(x){ return x.k===name; })[0]; if(!sl) return;
   var v = name==="history" ? history_ : name==="additions" ? additions : name==="radiology" ? radAdds : name==="meds" ? medAdds
+        : name==="bp" ? bpAdds : name==="glu" ? gluAdds
         : name==="pathology" ? pathAdds : name==="notes" ? notes : name==="nextTest" ? nextTest
         : name==="conditions" ? conditions : name==="allergies" ? allergies : name==="customTests" ? customTests : fuDone;
   LS.set(pk(sl.ls), JSON.stringify(v));
@@ -1879,6 +2002,8 @@ function saveSlice(name){
 function newId(){ return "r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
 function saveRad(){ LS.set(pk("radiology"), JSON.stringify(radAdds)); syncBackupBox&&syncBackupBox(); saveLocalBackup&&saveLocalBackup(); }
 function saveMeds(){ LS.set(pk("meds"), JSON.stringify(medAdds)); syncBackupBox&&syncBackupBox(); saveLocalBackup&&saveLocalBackup(); }
+function saveBp(){ LS.set(pk("bp"), JSON.stringify(bpAdds)); syncBackupBox&&syncBackupBox(); saveLocalBackup&&saveLocalBackup(); }
+function saveGlu(){ LS.set(pk("glu"), JSON.stringify(gluAdds)); syncBackupBox&&syncBackupBox(); saveLocalBackup&&saveLocalBackup(); }
 /* build-baked items + this device's added items. `_mine`/`_idx` tag the
    editable ones (index into radAdds/medAdds). */
 function radAll(){
@@ -2848,7 +2973,7 @@ function fillUnitSelect(){
 }
 document.getElementById("f-test").addEventListener("change",fillUnitSelect);
 
-/* ---------- overview / year filter / notes / print ---------- */
+/* ---------- overview / year filter / notes ---------- */
 function renderYearSel(){
   var ys=years();
   var opt='<option value="">'+esc(t("همهٔ سال‌ها","All years"))+'</option>'+
@@ -2992,99 +3117,6 @@ function renderPanels(){
   });
 }
 var renderSummary=renderPanels;   // alias: showTab/renderAll call renderSummary
-/* doctor export: identity, clinical summary, pathology/imaging, lab table (8 reports per block so A4 fits), charts.
-   Only data that exists is printed — empty fields are left out, never filled in. */
-var PRINT_COLS = 8;
-function pSection(title, rows){
-  return rows.length ? '<h2 class="psec">'+esc(title)+'</h2><ul class="plist">'+rows.map(function(r){ return '<li>'+r+'</li>'; }).join("")+'</ul>' : "";
-}
-function buildPrintView(){
-  var pv=document.getElementById("printview"), last=S[S.length-1], P=D.patient;
-  var sexTxt = P.sex==="F" ? t("زن","Female") : P.sex==="M" ? t("مرد","Male") : "";
-  var idBits=[ sexTxt, ageNow()!=null ? t("سن ","Age ")+ageNow() : "", P.birth ? t("تولد ","Born ")+P.birth : "",
-               P.nationalId ? t("کد ملی ","National ID ")+P.nationalId : "", P.bloodType ? t("گروه خون ","Blood type ")+P.bloodType : "" ]
-             .filter(Boolean).map(esc).join("  ·  ");
-  var h='<h1>'+esc(t(P.fa,P.en))+'</h1><div class="pmeta">'+idBits+
-    '<br>'+(last ? t("بازه","Span")+' '+esc(S[0].j)+' – '+esc(last.j)+'  ·  '+t("برگه‌ها","Reports")+' '+S.length+'  ·  ' : '')+
-    t("تاریخ خروجی","Exported")+' '+esc(gStrToJ(new Date().toISOString().slice(0,10)))+'</div>';
-  h+=pSection(t("بیماری‌ها","Conditions"), conditions.filter(function(c){ return c.label; }).map(function(c){
-      return '<b>'+esc(c.label)+'</b>'+(c.since?' — '+esc(c.since):'')+(c.note?' — '+esc(c.note):''); }));
-  h+=pSection(t("آلرژی‌ها","Allergies"), allergies.filter(function(a){ return a.agent; }).map(function(a){
-      return '<b>'+esc(a.agent)+'</b>'+(a.reaction?' — '+esc(a.reaction):''); }));
-  h+=pSection(t("داروهای فعلی","Current medications"), medAll().filter(function(m){ return m.name && m.active!==false; }).map(function(m){
-      return '<b>'+esc(m.name)+'</b>'+[m.dose,m.freq,m.timing].filter(Boolean).map(function(x){ return ' · '+esc(x); }).join(""); }));
-  h+=pSection(t("پاتولوژی","Pathology"), pathAll().map(function(p){
-      return esc(p.j||"")+' — '+esc(p.specimen||"")+': <b>'+esc(p.diagnosis||"")+'</b>'; }));
-  h+=pSection(t("تصویربرداری","Imaging"), radAll().map(function(r){
-      return esc(r.j||"")+' — '+esc([r.modality,r.region].filter(Boolean).join(" "))+(r.impression?': <b>'+esc(r.impression)+'</b>':''); }));
-  if(!last){ pv.innerHTML=h; document.body.classList.add("printing"); return; }
-  var keys=activeTestKeys();
-  var byCat={}; keys.forEach(function(k){ (byCat[D.tests[k].cat]=byCat[D.tests[k].cat]||[]).push(k); });
-  h+='<h2 class="psec">'+t("آزمایش‌ها","Laboratory results")+'</h2>';
-  for(var c0=0; c0<S.length; c0+=PRINT_COLS){
-    var cols=S.slice(c0, c0+PRINT_COLS);
-    h+='<table><thead><tr><th>'+t("آزمایش","Test")+'</th>'+
-       cols.map(function(r){ return '<th>'+esc(r.j)+'</th>'; }).join("")+'</tr></thead><tbody>';
-    D.cats.forEach(function(cat){
-      var ks=(byCat[cat.k]||[]).filter(function(k){ return cols.some(function(r){ return r.v[k]!=null; }); });
-      if(!ks.length) return;
-      h+='<tr class="cat"><th colspan="'+(cols.length+1)+'">'+esc(t(cat.fa,cat.en))+'</th></tr>';
-      ks.forEach(function(k){
-        var m=D.tests[k], rr=rangeText(k);
-        h+='<tr><td>'+esc(t(m.fa,m.en))+' <small>'+(dUnit(k)?esc(dUnit(k))+" ":"")+(rr?"("+esc(rr)+")":"")+'</small></td>';
-        cols.forEach(function(r){
-          var v=r.v[k];
-          h+= v==null ? '<td></td>' : '<td class="'+flagOf(k,v)+'">'+esc(dvs(k,v))+(rrDiff(r,k)?'*':'')+'</td>';
-        });
-        h+='</tr>';
-      });
-    });
-    h+='</tbody></table>';
-  }
-  var nk=Object.keys(notes).filter(function(g){ return notes[g]; }).sort();
-  if(nk.length) h+='<div class="pnote"><b>'+t("یادداشت‌ها","Notes")+':</b> '+nk.map(function(g){
-    var rr=S.filter(function(x){ return x.g===g; })[0];
-    return esc(rr?rr.j:g)+' — '+esc(notes[g]);
-  }).join('   |   ')+'</div>';
-  var saved=VIS; VIS=S.slice();
-  /* compact: a short vital set + any test whose latest value is out of range */
-  var PRINTKEYS=["hba1c","fbs","glu2","cr","bun","ldl","tg","hdl","hb","psat","vitd","tsh"];
-  var ck=activeTestKeys().filter(function(k){
-    var p=pointsOf(k,S); if(p.length<2) return false;
-    if(PRINTKEYS.indexOf(k)>=0) return true;
-    return !!flagOf(k, p[p.length-1].v);
-  });
-  if(ck.length) h+='<h2 style="font-size:13px;margin:14px 0 6px">'+
-    t("نمودار شاخص‌های حیاتی و مقادیر غیرطبیعی","Vital markers & abnormal values")+'</h2>';
-  h+='<div class="pcharts">'+ck.map(function(k){
-    var m=D.tests[k];
-    return '<div class="card"><h3><span>'+esc(t(m.fa,m.en))+'</span><span>'+esc(dUnit(k)||"")+'</span></h3>'+spark(k)+'</div>';
-  }).join("")+'</div>';
-  VIS=saved;
-  h+='<div class="pfoot">'+t("خروجی از پرونده شخصی (PDLF) — ابزار ثبت و نمایش است، نه تشخیص. بازه‌های مرجع: استاندارد بین‌المللی یا بازهٔ چاپ‌شدهٔ آزمایشگاه.",
-      "Exported from a personal record (PDLF) — a record-keeping tool, not a diagnosis. Reference ranges: international standard or the lab's printed range.")+'</div>';
-  pv.innerHTML=h;
-  document.body.classList.add("printing");
-}
-/* one call, every platform: Android WebView has no window.print (native bridge → system print, Save as PDF / share);
-   Tauri uses the WebView2 print dialog (Microsoft Print to PDF); browsers/PWA use window.print(). */
-function doPrint(){
-  buildPrintView();
-  var title="PDLF "+t(D.patient.fa,D.patient.en)+" "+new Date().toISOString().slice(0,10), old=document.title;
-  document.title=title;                                   // becomes the suggested PDF file name
-  setTimeout(function(){ document.title=old; }, 4000);
-  if(window.PDLFNative && window.PDLFNative.print) return window.PDLFNative.print(title);
-  var T=window.__TAURI__;
-  if(T && T.core && T.core.invoke) return T.core.invoke("print_page").catch(function(){ window.print(); });
-  window.print();
-}
-/* also handle Ctrl+P / browser menu print: fill the print view just-in-time */
-window.addEventListener("beforeprint", buildPrintView);
-window.addEventListener("afterprint", function(){
-  document.body.classList.remove("printing");
-  var pv=document.getElementById("printview"); if(pv) pv.innerHTML="";
-});
-
 
 /* ---------- Patient status card (overview, top) ----------
    Ocean-Breeze, neumorphic, gamified but minimal: ring (current state) + level/XP + trajectory / confidence / alerts,
@@ -3358,6 +3390,7 @@ function showTab(name){
   if(name==="prof") renderProfile();
   if(name==="path") renderPath();
   if(name==="meds") renderMeds();
+  if(name==="vit") renderVitals();
 }
 function renderAll(){
   computeVis();
@@ -3365,7 +3398,7 @@ function renderAll(){
   renderSummary(); renderTable();
   if(panelOn("charts")) renderCharts();   // otherwise rendered lazily on tab open
   renderPath(); renderMine(); renderSrc(); renderCustomTests(); if(panelOn("prof")) renderProfile();
-  renderRad(); renderMeds();
+  renderRad(); renderMeds(); renderVitals();
 }
 
 document.getElementById("langBtn").onclick=function(){
@@ -3429,6 +3462,139 @@ document.getElementById("f-j").addEventListener("blur",function(){
   var gi=document.getElementById("f-g"); if(!gi.value){ var x=jStrToG(this.value); if(x) gi.value=x; }
 });
 
+/* ---------- home monitoring: blood pressure + glucose meter ----------
+   bp item:  {id,g,j,sys,dia,pulse,note,src:"manual"}
+   glu item: {id,g,j,ctx,val,note,src:"manual"}
+   Always patient-entered (no baked/pre-loaded readings) — plain lists, newest first, editable/deletable.
+   Classification: src/lib/vitals.js (general guideline bands, not a diagnosis). */
+var GLU_CTX=[["ناشتا","Fasting"],["قبل از غذا","Before meal"],["۲ ساعت بعد غذا","2h after meal"],
+  ["قبل از خواب","Bedtime"],["تصادفی","Random"]];
+var bpEdit=-1, gluEdit=-1;
+
+function vitFormMode(prefix, addLabel, editLabel, editing){
+  var b=document.getElementById(prefix+"-add"), h=document.getElementById(prefix+"-formh");
+  b.setAttribute("data-fa",editing?"ذخیرهٔ تغییرات":addLabel[0]); b.setAttribute("data-en",editing?"Save changes":addLabel[1]);
+  h.setAttribute("data-fa",editing?editLabel[0]:addLabel[2]); h.setAttribute("data-en",editing?editLabel[1]:addLabel[3]);
+  document.getElementById(prefix+"-cancel").hidden=!editing;
+  localizeIn(b.parentNode); localizeIn(h.parentNode);
+}
+function bpFormClear(){
+  bpEdit=-1;
+  document.getElementById("bp-sys").value=""; document.getElementById("bp-dia").value="";
+  document.getElementById("bp-pulse").value=""; document.getElementById("bp-note").value="";
+  document.getElementById("bp-j").value=toJalaliToday();
+  vitFormMode("bp", ["ثبت فشار خون","Log reading","ثبت فشار خون","Log blood pressure"], ["ویرایش فشار خون","Edit reading"], false);
+}
+function gluFormClear(){
+  gluEdit=-1;
+  document.getElementById("glu-val").value=""; document.getElementById("glu-note").value="";
+  document.getElementById("glu-j").value=toJalaliToday();
+  vitFormMode("glu", ["ثبت قند خون","Log reading","ثبت قند خون (دستگاه خانگی)","Log glucose (home meter)"], ["ویرایش قند خون","Edit reading"], false);
+}
+function gluOptions(){
+  var s=document.getElementById("glu-ctx"), v=s.value;
+  s.innerHTML=optList(GLU_CTX); s.value=v||GLU_CTX[0][0];
+}
+function bpFormFill(i){
+  var m=bpAdds[i]; if(!m) return; bpEdit=i;
+  document.getElementById("bp-sys").value=m.sys; document.getElementById("bp-dia").value=m.dia;
+  document.getElementById("bp-pulse").value=m.pulse||""; document.getElementById("bp-note").value=m.note||"";
+  document.getElementById("bp-j").value=m.j||"";
+  vitFormMode("bp", ["ثبت فشار خون","Log reading","ثبت فشار خون","Log blood pressure"], ["ویرایش فشار خون","Edit reading"], true);
+  document.getElementById("bp-formh").scrollIntoView({block:"start"});
+}
+function gluFormFill(i){
+  var m=gluAdds[i]; if(!m) return; gluEdit=i;
+  document.getElementById("glu-val").value=m.val; document.getElementById("glu-ctx").value=m.ctx||GLU_CTX[0][0];
+  document.getElementById("glu-note").value=m.note||""; document.getElementById("glu-j").value=m.j||"";
+  vitFormMode("glu", ["ثبت قند خون","Log reading","ثبت قند خون (دستگاه خانگی)","Log glucose (home meter)"], ["ویرایش قند خون","Edit reading"], true);
+  document.getElementById("glu-formh").scrollIntoView({block:"start"});
+}
+function vitBadge(cat){                        // cat = {level,fa,en} from PLF.vitals, or a bare flag string
+  if(!cat) return "";
+  var level = typeof cat==="string" ? cat : cat.level;
+  var cls = (level==="crisis"||level==="stage2"||level==="stage1"||level==="high") ? "hi"
+          : level==="elevated" ? "warn" : (level==="low"||level==="verylow") ? "lo" : "ok";
+  var label = typeof cat==="string"
+    ? t({verylow:"خطر: بسیار پایین",low:"پایین",normal:"طبیعی",high:"بالا"}[level],
+         {verylow:"Danger: very low",low:"Low",normal:"Normal",high:"High"}[level])
+    : t(cat.fa,cat.en);
+  return '<span class="vbadge '+cls+'">'+esc(label)+'</span>';
+}
+function renderBp(){
+  var w=document.getElementById("bpWrap"); if(!w) return;
+  if(!bpAdds.length){ w.innerHTML='<p class="hint" data-fa="هنوز فشار خونی ثبت نشده." data-en="No blood pressure logged yet."></p>'; localizeIn(w); return; }
+  var ordered=bpAdds.map(function(m,i){ return {m:m,i:i}; }).sort(function(a,b){ return String(b.m.g).localeCompare(String(a.m.g)); });
+  w.innerHTML=ordered.map(function(x){
+    var m=x.m, cat=PLF.vitals.bpCategory(m.sys,m.dia);
+    return '<div class="vrow"><span class="vval">'+esc(m.sys)+'/'+esc(m.dia)+'</span>'+vitBadge(cat)+
+      '<span class="vmeta"><b>'+esc(faDigits(m.j||""))+'</b>'+
+        (m.pulse?'  ·  '+esc(m.pulse)+' '+t("ضربان","bpm"):'')+
+        (m.note?'  ·  '+esc(m.note):'')+'</span>'+
+      '<span class="vact"><button data-bpedit="'+x.i+'" data-fa="ویرایش" data-en="Edit"></button>'+
+        '<button class="del" data-bprm="'+x.i+'" data-fa="حذف" data-en="Delete"></button></span></div>';
+  }).join("");
+  w.querySelectorAll("[data-bpedit]").forEach(function(b){ b.onclick=function(){ bpFormFill(+b.getAttribute("data-bpedit")); }; });
+  w.querySelectorAll("[data-bprm]").forEach(function(b){
+    b.onclick=function(){
+      if(!confirm(t("این مورد حذف شود؟","Delete this reading?"))) return;
+      bpAdds.splice(+b.getAttribute("data-bprm"),1); saveBp(); bpFormClear(); renderBp();
+    };
+  });
+  localizeIn(w);
+}
+function renderGlu(){
+  var w=document.getElementById("gluWrap"); if(!w) return;
+  if(!gluAdds.length){ w.innerHTML='<p class="hint" data-fa="هنوز قند خونی ثبت نشده." data-en="No glucose logged yet."></p>'; localizeIn(w); return; }
+  var ordered=gluAdds.map(function(m,i){ return {m:m,i:i}; }).sort(function(a,b){ return String(b.m.g).localeCompare(String(a.m.g)); });
+  w.innerHTML=ordered.map(function(x){
+    var m=x.m, ctxLbl=GLU_CTX.filter(function(c){ return c[0]===m.ctx; })[0];
+    return '<div class="vrow"><span class="vval">'+esc(m.val)+' <small>mg/dL</small></span>'+vitBadge(PLF.vitals.glucoseFlag(m.ctx,m.val))+
+      '<span class="vmeta"><b>'+esc(faDigits(m.j||""))+'</b>  ·  '+esc(ctxLbl?t(ctxLbl[0],ctxLbl[1]):(m.ctx||""))+
+        (m.note?'  ·  '+esc(m.note):'')+'</span>'+
+      '<span class="vact"><button data-gluedit="'+x.i+'" data-fa="ویرایش" data-en="Edit"></button>'+
+        '<button class="del" data-glurm="'+x.i+'" data-fa="حذف" data-en="Delete"></button></span></div>';
+  }).join("");
+  w.querySelectorAll("[data-gluedit]").forEach(function(b){ b.onclick=function(){ gluFormFill(+b.getAttribute("data-gluedit")); }; });
+  w.querySelectorAll("[data-glurm]").forEach(function(b){
+    b.onclick=function(){
+      if(!confirm(t("این مورد حذف شود؟","Delete this reading?"))) return;
+      gluAdds.splice(+b.getAttribute("data-glurm"),1); saveGlu(); gluFormClear(); renderGlu();
+    };
+  });
+  localizeIn(w);
+}
+function renderVitals(){ gluOptions(); renderBp(); renderGlu(); }
+
+function bpSubmit(){
+  var sys=+document.getElementById("bp-sys").value, dia=+document.getElementById("bp-dia").value;
+  var pulse=document.getElementById("bp-pulse").value, j=faDigits(document.getElementById("bp-j").value.trim());
+  if(!sys||!dia||isNaN(sys)||isNaN(dia)){ alert(t("سیستولیک و دیاستولیک را وارد کنید","Enter systolic and diastolic")); return; }
+  var g=jStrToG(j); if(!g){ alert(t("تاریخ شمسی معتبر نیست (نمونه: 1405/06/01)","Invalid Jalali date (e.g. 1405/06/01)")); return; }
+  var item={id:(bpEdit>=0?bpAdds[bpEdit].id:newId()), g:g, j:j, sys:sys, dia:dia,
+    pulse:(pulse!==""&&!isNaN(+pulse))?+pulse:null, note:document.getElementById("bp-note").value.trim(), src:"manual"};
+  var edited=bpEdit>=0;
+  if(edited) bpAdds[bpEdit]=item; else bpAdds.push(item);
+  saveBp(); bpFormClear(); renderBp();
+  toast(edited?t("ذخیره شد","Saved"):t("ثبت شد","Logged"));
+}
+function gluSubmit(){
+  var val=+document.getElementById("glu-val").value, j=faDigits(document.getElementById("glu-j").value.trim());
+  if(!val||isNaN(val)){ alert(t("مقدار قند خون را وارد کنید","Enter the glucose value")); return; }
+  var g=jStrToG(j); if(!g){ alert(t("تاریخ شمسی معتبر نیست (نمونه: 1405/06/01)","Invalid Jalali date (e.g. 1405/06/01)")); return; }
+  var item={id:(gluEdit>=0?gluAdds[gluEdit].id:newId()), g:g, j:j, ctx:document.getElementById("glu-ctx").value,
+    val:val, note:document.getElementById("glu-note").value.trim(), src:"manual"};
+  var edited=gluEdit>=0;
+  if(edited) gluAdds[gluEdit]=item; else gluAdds.push(item);
+  saveGlu(); gluFormClear(); renderGlu();
+  toast(edited?t("ذخیره شد","Saved"):t("ثبت شد","Logged"));
+}
+document.getElementById("bp-add").onclick=bpSubmit;
+document.getElementById("bp-cancel").onclick=bpFormClear;
+document.getElementById("glu-add").onclick=gluSubmit;
+document.getElementById("glu-cancel").onclick=gluFormClear;
+bpFormClear(); gluFormClear();
+
 /* ===== Gemini key / settings ===== */
 var GEMINI_TIMEOUT_MS = 90000;    // generous: users are often behind a slow/unstable VPN (Google APIs need one from Iran)
 function gKey(){ return EMB_KEYS.length ? EMB_KEYS[keyIdx % EMB_KEYS.length] : (LS.get("lab.gemini.key")||""); }
@@ -3463,6 +3629,90 @@ document.getElementById("gk-test").onclick=function(){
     .catch(function(){ setMsg(t("خطای شبکه — احتمالاً به VPN نیاز دارید","Network error — VPN likely needed")); });
 };
 
+/* ---------- report ingestion for imaging + pathology (photo / PDF / pasted text -> draft -> save) ----------
+   From MedicalFile. The source document is never stored. Uses geminiCall() from 62-ai-engine.js. */
+var INGEST_PROMPTS = {
+  rad: "You are reading a radiology report (ultrasound, CT, MRI, X-ray, mammography, ...). Return ONLY minified JSON: "+
+    "{\"date\":string|null,\"center\":string|null,\"doctor\":string|null,\"modality\":string,\"region\":string,\"indication\":string,"+
+    "\"findings\":string,\"impression\":string}. Keep the original language of the text fields. "+
+    "If a Jalali date is shown return it as \"YYYY/MM/DD\". Convert Persian/Arabic digits to Western.",
+  path: "You are reading a pathology report. Return ONLY minified JSON: "+
+    "{\"date\":string|null,\"center\":string|null,\"doctor\":string|null,\"specimen\":string,\"clinical\":string,\"gross\":string,"+
+    "\"micro\":string,\"diagnosis\":string}. Keep the original language. "+
+    "If a Jalali date is shown return it as \"YYYY/MM/DD\". Convert Persian/Arabic digits to Western."
+};
+function jnorm(s){
+  s=faDigits(String(s==null?"":s)).replace(/-/g,"/").trim();
+  var m=s.match(/^(\d{3,4})\/(\d{1,2})\/(\d{1,2})$/);
+  if(m) return m[1]+"/"+p2(+m[2])+"/"+p2(+m[3]);
+  var g=s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);                     // gregorian slipped in
+  return "";
+}
+function ingestExtract(kind, text, files){
+  var bad=checkFiles(files); if(bad) return Promise.reject(bad);
+  var parts=[]; if(text && text.trim()) parts.push({text:text.trim()});
+  var fp = files && files.length ? Promise.all(Array.prototype.map.call(files,fileToPart)) : Promise.resolve([]);
+  return fp.then(function(f){ return geminiCall(INGEST_PROMPTS[kind], parts.concat(f)); });
+}
+/* fill the matching add-form from an extracted draft, then let the user review and press Add */
+function ingestFill(kind, d){
+  d=d||{};
+  var j=jnorm(d.date), set=function(id,v){ var el=document.getElementById(id); if(el) el.value=v==null?"":String(v); };
+  if(kind==="rad"){
+    set("rad-j",faDigits(j)); set("rad-center",d.center); set("rad-dr",d.doctor); set("rad-region",d.region);
+    set("rad-indication",d.indication); set("rad-find",d.findings); set("rad-imp",d.impression);
+    var mod=RAD_MODS.filter(function(m){ return String(d.modality||"").toLowerCase().indexOf(m[1].toLowerCase().split(" ")[0])>=0 ||
+                                            String(d.modality||"").indexOf(m[0])>=0; })[0];
+    document.getElementById("rad-mod").value = mod ? mod[0] : "سایر";
+    fuToForm("rad",null);
+    document.getElementById("rad-add").scrollIntoView({block:"center"});
+  } else {
+    set("path-j",faDigits(j)); set("path-center",d.center); set("path-dr",d.doctor); set("path-specimen",d.specimen);
+    set("path-clin",d.clinical); set("path-gross",d.gross); set("path-micro",d.micro); set("path-diag",d.diagnosis);
+    fuToForm("path",null);
+    document.getElementById("path-add").scrollIntoView({block:"center"});
+  }
+  toast(t("مقادیر خوانده شد؛ بررسی کنید و «افزودن» را بزنید","Values read — review, then press Add"));
+}
+function openIngest(kind){
+  if(document.getElementById("ing")) return;
+  var dlg=document.createElement("dialog"); dlg.id="ing"; dlg.className="ingdlg";
+  dlg.innerHTML='<div class="revbox"><h3 class="fh">'+esc(t("افزودن از گزارش","Add from report"))+'</h3>'+
+    '<p class="hint">'+esc(t("عکس، PDF یا متن گزارش را بدهید؛ فرم پر می‌شود و شما بررسی می‌کنید. سند نگه داشته نمی‌شود.",
+      "Give a photo, PDF or the report text; the form is filled and you review it. The document is not kept."))+'</p>'+
+    '<div class="fwide"><span class="flbl">'+esc(t("متن گزارش (اختیاری)","Report text (optional)"))+'</span><textarea id="ing-text" rows="5"></textarea></div>'+
+    '<div class="row"><button type="button" class="btn primary" id="ing-photo-btn">'+esc(t("عکس بگیر","Take photo"))+'</button>'+
+    '<button type="button" class="btn" id="ing-file-btn">'+esc(t("انتخاب عکس / PDF","Pick photo / PDF"))+'</button>'+
+    '<input id="ing-photo" type="file" accept="image/*" capture="environment" hidden>'+
+    '<input id="ing-file" type="file" accept="image/*,application/pdf" multiple hidden></div>'+
+    '<p class="hint" id="ing-nokey" hidden>'+esc(t("کلید Gemini تنظیم نشده است (تب «افزودن / داده» ← کلید Gemini).","No Gemini key set (Add / data tab → Gemini key)."))+'</p>'+
+    '<div class="row" style="justify-content:flex-end"><span id="ing-msg" class="hint" style="margin:0 auto 0 0"></span>'+
+    '<button type="button" class="btn" id="ing-cancel">'+esc(t("انصراف","Cancel"))+'</button>'+
+    '<button type="button" class="btn primary" id="ing-run">'+esc(t("استخراج","Extract"))+'</button></div></div>';
+  document.body.appendChild(dlg);
+  var msg=dlg.querySelector("#ing-msg");
+  function close(){ try{ dlg.close(); }catch(e){} dlg.remove(); }
+  dlg.querySelector("#ing-nokey").hidden=!!gKey();
+  dlg.querySelector("#ing-cancel").onclick=close;
+  dlg.addEventListener("cancel",function(e){ e.preventDefault(); close(); });
+  function run(text,files){
+    if(!(text&&text.trim()) && !(files&&files.length)){ msg.textContent=t("متن یا فایل بدهید","Add text or a file"); return; }
+    if(!gKey()){ dlg.querySelector("#ing-nokey").hidden=false; return; }
+    msg.textContent=t("در حال خواندن…","Reading…");
+    ingestExtract(kind,text,files).then(function(d){ close(); ingestFill(kind,d); },
+      function(e){ msg.textContent=(e&&e.message)||t("خطا","Error"); });
+  }
+  dlg.querySelector("#ing-run").onclick=function(){ run(dlg.querySelector("#ing-text").value,[]); };
+  dlg.querySelector("#ing-photo-btn").onclick=function(){ dlg.querySelector("#ing-photo").click(); };
+  dlg.querySelector("#ing-file-btn").onclick=function(){ dlg.querySelector("#ing-file").click(); };
+  dlg.querySelector("#ing-photo").onchange=function(){ var f=this.files; run("",f); this.value=""; };
+  dlg.querySelector("#ing-file").onchange=function(){ var f=this.files; run("",f); this.value=""; };
+  dlg.showModal();
+}
+document.getElementById("rad-ingest").onclick=function(){ openIngest("rad"); };
+document.getElementById("path-ingest").onclick=function(){ openIngest("path"); };
+
+/* ===== AI engines: Gemini (primary) + Mistral (fallback); prompt, file parts ===== */
 /* ===== photo / PDF extraction via Gemini ===== */
 function downscaleImage(file){                 // shrink big photos before upload (faster + cheaper + avoids limits)
   return new Promise(function(res){
@@ -3506,8 +3756,55 @@ function gemPrompt(){
     "For each result set \"key\" to the matching catalog key below, or \"\" if none matches. "+
     "Skip non-numeric results.\nCATALOG:\n"+catalogForPrompt();
 }
-/* one Gemini call: prompt + parts -> parsed JSON object (throws readable errors) */
-function geminiCall(promptText, parts, attempt){
+/* one AI call: prompt + parts -> parsed JSON. Gemini first (with its retries); if it still fails and a Mistral key
+   exists, the same request goes to Mistral. Callers never know which engine answered. */
+function geminiCall(promptText, parts){
+  if(!gKey() && mKey()) return mistralCall(promptText, parts);
+  return gemCall(promptText, parts, 0).catch(function(e){
+    if(!mKey()) throw e;
+    return mistralCall(promptText, parts).catch(function(){ throw e; });   // both failed: show Gemini's error
+  });
+}
+function parseJsonText(txt){
+  txt=String(txt||"").replace(/^```(?:json)?\s*/i,"").replace(/```\s*$/,"").trim();
+  if(!txt) throw new Error(t("پاسخ خالی بود، دوباره تلاش کنید.","Empty response, try again."));
+  try{ return JSON.parse(txt); }
+  catch(e){ var m=txt.match(/\{[\s\S]*\}/); if(m){ try{ return JSON.parse(m[0]); }catch(e2){} }
+    throw new Error(t("پاسخ نامعتبر بود، دوباره تلاش کنید.","Invalid response, try again.")); }
+}
+/* Mistral: PDFs go through Mistral OCR (text), images go straight to the vision chat model, JSON mode */
+var MISTRAL = "https://api.mistral.ai/v1/";
+function mistralPost(path, body){
+  var ctrl = ("AbortController" in window) ? new AbortController() : null;
+  var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, GEMINI_TIMEOUT_MS);
+  return fetch(MISTRAL+path, { method:"POST", signal:ctrl?ctrl.signal:undefined,
+      headers:{"Content-Type":"application/json", "Authorization":"Bearer "+mKey()}, body:JSON.stringify(body) })
+    .then(function(r){ return r.json().then(function(j){
+      if(!r.ok){ var er=new Error((j&&(j.message||(j.error&&j.error.message)))||("Mistral HTTP "+r.status)); er.status=r.status; throw er; }
+      return j; }); })
+    .then(function(v){ clearTimeout(timer); return v; }, function(e){ clearTimeout(timer); throw e; });
+}
+function mistralCall(promptText, parts){
+  var content=[{type:"text", text:promptText}], pdfs=[];
+  (parts||[]).forEach(function(p){
+    if(p.text) content.push({type:"text", text:p.text});
+    var d=p.inline_data; if(!d) return;
+    if(/pdf/i.test(d.mime_type)) pdfs.push(d);
+    else content.push({type:"image_url", image_url:"data:"+d.mime_type+";base64,"+d.data});
+  });
+  return Promise.all(pdfs.map(function(d){
+    return mistralPost("ocr", {model:"mistral-ocr-latest", document:{type:"document_url", document_url:"data:application/pdf;base64,"+d.data}})
+      .then(function(j){ return (j.pages||[]).map(function(pg){ return pg.markdown||""; }).join("\n\n"); });
+  })).then(function(texts){
+    texts.forEach(function(tx){ content.push({type:"text", text:"DOCUMENT TEXT (OCR):\n"+tx}); });
+    return mistralPost("chat/completions", {model:"mistral-medium-latest", temperature:0,
+      response_format:{type:"json_object"}, messages:[{role:"user", content:content}]});
+  }).then(function(j){
+    return parseJsonText(j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content);
+  });
+}
+/* Gemini with retries/key rotation */
+function gemCall(promptText, parts, attempt){
   if(!gKey()) return Promise.reject(new Error("nokey"));
   attempt = attempt||0;
   var ctrl = ("AbortController" in window) ? new AbortController() : null;
@@ -3550,7 +3847,7 @@ function geminiCall(promptText, parts, attempt){
       if(timedOut || e.status!==500 && e.status!==503) nextKey();      // rotate key: on timeout, and on quota/auth errors
       else if(attempt%2===1) nextKey();                                // overloaded (503/500): alternate keys every other try
       var delay = Math.min(4000, 500*Math.pow(2,attempt));             // 500,1000,2000,4000,4000...
-      return new Promise(function(res){ setTimeout(res, delay); }).then(function(){ return geminiCall(promptText, parts, attempt+1); });
+      return new Promise(function(res){ setTimeout(res, delay); }).then(function(){ return gemCall(promptText, parts, attempt+1); });
     }
     if(timedOut) throw new Error(t("زمان درخواست تمام شد. اینترنت/VPN را بررسی و دوباره تلاش کنید.",
                                    "Request timed out. Check internet/VPN and retry."));
@@ -3568,8 +3865,10 @@ function geminiExtract(files){
   var bad=checkFiles(files); if(bad) return Promise.reject(bad);
   return Promise.all(Array.prototype.map.call(files,fileToPart)).then(function(parts){ return geminiCall(gemPrompt(), parts); });
 }
+
+/* ===== photo / PDF lab-value capture: toast, review dialog, batch undo ===== */
 var normU=PLF.units.norm;
-function round2(n){ return Math.round(n*100)/100; }
+
 /* extracted unit -> catalog standard unit (lib/units.js); null when already standard or unknown */
 function convertExtracted(unit,key,v){
   var m=D.tests[key]; if(!m||!unit||PLF.units.isStd(m,unit)) return null;
@@ -3780,91 +4079,6 @@ document.getElementById("cap-undo").onclick=undoPhotoBatch;
 document.getElementById("cap-in").onchange=function(){ var f=this.files; runCapture(f); this.value=""; };
 document.getElementById("cap-in2").onchange=function(){ var f=this.files; runCapture(f); this.value=""; };
 
-
-
-/* ---------- report ingestion for imaging + pathology (photo / PDF / pasted text -> draft -> save) ----------
-   From MedicalFile. The source document is never stored. Uses geminiCall() from 60-gemini.js. */
-var INGEST_PROMPTS = {
-  rad: "You are reading a radiology report (ultrasound, CT, MRI, X-ray, mammography, ...). Return ONLY minified JSON: "+
-    "{\"date\":string|null,\"center\":string|null,\"doctor\":string|null,\"modality\":string,\"region\":string,\"indication\":string,"+
-    "\"findings\":string,\"impression\":string}. Keep the original language of the text fields. "+
-    "If a Jalali date is shown return it as \"YYYY/MM/DD\". Convert Persian/Arabic digits to Western.",
-  path: "You are reading a pathology report. Return ONLY minified JSON: "+
-    "{\"date\":string|null,\"center\":string|null,\"doctor\":string|null,\"specimen\":string,\"clinical\":string,\"gross\":string,"+
-    "\"micro\":string,\"diagnosis\":string}. Keep the original language. "+
-    "If a Jalali date is shown return it as \"YYYY/MM/DD\". Convert Persian/Arabic digits to Western."
-};
-function jnorm(s){
-  s=faDigits(String(s==null?"":s)).replace(/-/g,"/").trim();
-  var m=s.match(/^(\d{3,4})\/(\d{1,2})\/(\d{1,2})$/);
-  if(m) return m[1]+"/"+p2(+m[2])+"/"+p2(+m[3]);
-  var g=s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);                     // gregorian slipped in
-  return "";
-}
-function ingestExtract(kind, text, files){
-  var bad=checkFiles(files); if(bad) return Promise.reject(bad);
-  var parts=[]; if(text && text.trim()) parts.push({text:text.trim()});
-  var fp = files && files.length ? Promise.all(Array.prototype.map.call(files,fileToPart)) : Promise.resolve([]);
-  return fp.then(function(f){ return geminiCall(INGEST_PROMPTS[kind], parts.concat(f)); });
-}
-/* fill the matching add-form from an extracted draft, then let the user review and press Add */
-function ingestFill(kind, d){
-  d=d||{};
-  var j=jnorm(d.date), set=function(id,v){ var el=document.getElementById(id); if(el) el.value=v==null?"":String(v); };
-  if(kind==="rad"){
-    set("rad-j",faDigits(j)); set("rad-center",d.center); set("rad-dr",d.doctor); set("rad-region",d.region);
-    set("rad-indication",d.indication); set("rad-find",d.findings); set("rad-imp",d.impression);
-    var mod=RAD_MODS.filter(function(m){ return String(d.modality||"").toLowerCase().indexOf(m[1].toLowerCase().split(" ")[0])>=0 ||
-                                            String(d.modality||"").indexOf(m[0])>=0; })[0];
-    document.getElementById("rad-mod").value = mod ? mod[0] : "سایر";
-    fuToForm("rad",null);
-    document.getElementById("rad-add").scrollIntoView({block:"center"});
-  } else {
-    set("path-j",faDigits(j)); set("path-center",d.center); set("path-dr",d.doctor); set("path-specimen",d.specimen);
-    set("path-clin",d.clinical); set("path-gross",d.gross); set("path-micro",d.micro); set("path-diag",d.diagnosis);
-    fuToForm("path",null);
-    document.getElementById("path-add").scrollIntoView({block:"center"});
-  }
-  toast(t("مقادیر خوانده شد؛ بررسی کنید و «افزودن» را بزنید","Values read — review, then press Add"));
-}
-function openIngest(kind){
-  if(document.getElementById("ing")) return;
-  var dlg=document.createElement("dialog"); dlg.id="ing"; dlg.className="ingdlg";
-  dlg.innerHTML='<div class="revbox"><h3 class="fh">'+esc(t("افزودن از گزارش","Add from report"))+'</h3>'+
-    '<p class="hint">'+esc(t("عکس، PDF یا متن گزارش را بدهید؛ فرم پر می‌شود و شما بررسی می‌کنید. سند نگه داشته نمی‌شود.",
-      "Give a photo, PDF or the report text; the form is filled and you review it. The document is not kept."))+'</p>'+
-    '<div class="fwide"><span class="flbl">'+esc(t("متن گزارش (اختیاری)","Report text (optional)"))+'</span><textarea id="ing-text" rows="5"></textarea></div>'+
-    '<div class="row"><button type="button" class="btn primary" id="ing-photo-btn">'+esc(t("عکس بگیر","Take photo"))+'</button>'+
-    '<button type="button" class="btn" id="ing-file-btn">'+esc(t("انتخاب عکس / PDF","Pick photo / PDF"))+'</button>'+
-    '<input id="ing-photo" type="file" accept="image/*" capture="environment" hidden>'+
-    '<input id="ing-file" type="file" accept="image/*,application/pdf" multiple hidden></div>'+
-    '<p class="hint" id="ing-nokey" hidden>'+esc(t("کلید Gemini تنظیم نشده است (تب «افزودن / داده» ← کلید Gemini).","No Gemini key set (Add / data tab → Gemini key)."))+'</p>'+
-    '<div class="row" style="justify-content:flex-end"><span id="ing-msg" class="hint" style="margin:0 auto 0 0"></span>'+
-    '<button type="button" class="btn" id="ing-cancel">'+esc(t("انصراف","Cancel"))+'</button>'+
-    '<button type="button" class="btn primary" id="ing-run">'+esc(t("استخراج","Extract"))+'</button></div></div>';
-  document.body.appendChild(dlg);
-  var msg=dlg.querySelector("#ing-msg");
-  function close(){ try{ dlg.close(); }catch(e){} dlg.remove(); }
-  dlg.querySelector("#ing-nokey").hidden=!!gKey();
-  dlg.querySelector("#ing-cancel").onclick=close;
-  dlg.addEventListener("cancel",function(e){ e.preventDefault(); close(); });
-  function run(text,files){
-    if(!(text&&text.trim()) && !(files&&files.length)){ msg.textContent=t("متن یا فایل بدهید","Add text or a file"); return; }
-    if(!gKey()){ dlg.querySelector("#ing-nokey").hidden=false; return; }
-    msg.textContent=t("در حال خواندن…","Reading…");
-    ingestExtract(kind,text,files).then(function(d){ close(); ingestFill(kind,d); },
-      function(e){ msg.textContent=(e&&e.message)||t("خطا","Error"); });
-  }
-  dlg.querySelector("#ing-run").onclick=function(){ run(dlg.querySelector("#ing-text").value,[]); };
-  dlg.querySelector("#ing-photo-btn").onclick=function(){ dlg.querySelector("#ing-photo").click(); };
-  dlg.querySelector("#ing-file-btn").onclick=function(){ dlg.querySelector("#ing-file").click(); };
-  dlg.querySelector("#ing-photo").onchange=function(){ var f=this.files; run("",f); this.value=""; };
-  dlg.querySelector("#ing-file").onchange=function(){ var f=this.files; run("",f); this.value=""; };
-  dlg.showModal();
-}
-document.getElementById("rad-ingest").onclick=function(){ openIngest("rad"); };
-document.getElementById("path-ingest").onclick=function(){ openIngest("path"); };
-
 /* ================= fullscreen chart (lightweight-charts) ================= */
 var _big=null;
 function themeColors(){
@@ -4062,6 +4276,109 @@ document.getElementById("themeBtn").onclick=function(){
 };
 
 
+/* ---------- doctor export (print / PDF on every platform) ---------- */
+/* doctor export: identity, clinical summary, pathology/imaging, lab table (8 reports per block so A4 fits), charts.
+   Only data that exists is printed — empty fields are left out, never filled in. */
+var PRINT_COLS = 8;
+function pSection(title, rows){
+  return rows.length ? '<h2 class="psec">'+esc(title)+'</h2><ul class="plist">'+rows.map(function(r){ return '<li>'+r+'</li>'; }).join("")+'</ul>' : "";
+}
+function buildPrintView(){
+  var pv=document.getElementById("printview"), last=S[S.length-1], P=D.patient;
+  var sexTxt = P.sex==="F" ? t("زن","Female") : P.sex==="M" ? t("مرد","Male") : "";
+  var idBits=[ sexTxt, ageNow()!=null ? t("سن ","Age ")+ageNow() : "", P.birth ? t("تولد ","Born ")+P.birth : "",
+               P.nationalId ? t("کد ملی ","National ID ")+P.nationalId : "", P.bloodType ? t("گروه خون ","Blood type ")+P.bloodType : "" ]
+             .filter(Boolean).map(esc).join("  ·  ");
+  var h='<h1>'+esc(t(P.fa,P.en))+'</h1><div class="pmeta">'+idBits+
+    '<br>'+(last ? t("بازه","Span")+' '+esc(S[0].j)+' – '+esc(last.j)+'  ·  '+t("برگه‌ها","Reports")+' '+S.length+'  ·  ' : '')+
+    t("تاریخ خروجی","Exported")+' '+esc(gStrToJ(new Date().toISOString().slice(0,10)))+'</div>';
+  h+=pSection(t("بیماری‌ها","Conditions"), conditions.filter(function(c){ return c.label; }).map(function(c){
+      return '<b>'+esc(c.label)+'</b>'+(c.since?' — '+esc(c.since):'')+(c.note?' — '+esc(c.note):''); }));
+  h+=pSection(t("آلرژی‌ها","Allergies"), allergies.filter(function(a){ return a.agent; }).map(function(a){
+      return '<b>'+esc(a.agent)+'</b>'+(a.reaction?' — '+esc(a.reaction):''); }));
+  h+=pSection(t("داروهای فعلی","Current medications"), medAll().filter(function(m){ return m.name && m.active!==false; }).map(function(m){
+      return '<b>'+esc(m.name)+'</b>'+[m.dose,m.freq,m.timing].filter(Boolean).map(function(x){ return ' · '+esc(x); }).join(""); }));
+  h+=pSection(t("فشار خون (ثبت خانگی)","Blood pressure (home log)"),
+      bpAdds.slice().sort(function(a,b){ return String(b.g).localeCompare(String(a.g)); }).slice(0,10).map(function(m){
+        var cat=PLF.vitals.bpCategory(m.sys,m.dia);
+        return esc(faDigits(m.j||""))+' — <b>'+esc(m.sys)+'/'+esc(m.dia)+'</b>'+(m.pulse?' ('+esc(m.pulse)+' '+t("ضربان","bpm")+')':'')+
+          (cat?'  '+esc(t(cat.fa,cat.en)):''); }));
+  h+=pSection(t("قند خون (دستگاه خانگی)","Glucose (home meter)"),
+      gluAdds.slice().sort(function(a,b){ return String(b.g).localeCompare(String(a.g)); }).slice(0,10).map(function(m){
+        var ctxLbl=GLU_CTX.filter(function(c){ return c[0]===m.ctx; })[0];
+        return esc(faDigits(m.j||""))+' — <b>'+esc(m.val)+' mg/dL</b>'+(ctxLbl?' ('+esc(t(ctxLbl[0],ctxLbl[1]))+')':''); }));
+  h+=pSection(t("پاتولوژی","Pathology"), pathAll().map(function(p){
+      return esc(p.j||"")+' — '+esc(p.specimen||"")+': <b>'+esc(p.diagnosis||"")+'</b>'; }));
+  h+=pSection(t("تصویربرداری","Imaging"), radAll().map(function(r){
+      return esc(r.j||"")+' — '+esc([r.modality,r.region].filter(Boolean).join(" "))+(r.impression?': <b>'+esc(r.impression)+'</b>':''); }));
+  if(!last){ pv.innerHTML=h; document.body.classList.add("printing"); return; }
+  var keys=activeTestKeys();
+  var byCat={}; keys.forEach(function(k){ (byCat[D.tests[k].cat]=byCat[D.tests[k].cat]||[]).push(k); });
+  h+='<h2 class="psec">'+t("آزمایش‌ها","Laboratory results")+'</h2>';
+  for(var c0=0; c0<S.length; c0+=PRINT_COLS){
+    var cols=S.slice(c0, c0+PRINT_COLS);
+    h+='<table><thead><tr><th>'+t("آزمایش","Test")+'</th>'+
+       cols.map(function(r){ return '<th>'+esc(r.j)+'</th>'; }).join("")+'</tr></thead><tbody>';
+    D.cats.forEach(function(cat){
+      var ks=(byCat[cat.k]||[]).filter(function(k){ return cols.some(function(r){ return r.v[k]!=null; }); });
+      if(!ks.length) return;
+      h+='<tr class="cat"><th colspan="'+(cols.length+1)+'">'+esc(t(cat.fa,cat.en))+'</th></tr>';
+      ks.forEach(function(k){
+        var m=D.tests[k], rr=rangeText(k);
+        h+='<tr><td>'+esc(t(m.fa,m.en))+' <small>'+(dUnit(k)?esc(dUnit(k))+" ":"")+(rr?"("+esc(rr)+")":"")+'</small></td>';
+        cols.forEach(function(r){
+          var v=r.v[k];
+          h+= v==null ? '<td></td>' : '<td class="'+flagOf(k,v)+'">'+esc(dvs(k,v))+(rrDiff(r,k)?'*':'')+'</td>';
+        });
+        h+='</tr>';
+      });
+    });
+    h+='</tbody></table>';
+  }
+  var nk=Object.keys(notes).filter(function(g){ return notes[g]; }).sort();
+  if(nk.length) h+='<div class="pnote"><b>'+t("یادداشت‌ها","Notes")+':</b> '+nk.map(function(g){
+    var rr=S.filter(function(x){ return x.g===g; })[0];
+    return esc(rr?rr.j:g)+' — '+esc(notes[g]);
+  }).join('   |   ')+'</div>';
+  var saved=VIS; VIS=S.slice();
+  /* compact: a short vital set + any test whose latest value is out of range */
+  var PRINTKEYS=["hba1c","fbs","glu2","cr","bun","ldl","tg","hdl","hb","psat","vitd","tsh"];
+  var ck=activeTestKeys().filter(function(k){
+    var p=pointsOf(k,S); if(p.length<2) return false;
+    if(PRINTKEYS.indexOf(k)>=0) return true;
+    return !!flagOf(k, p[p.length-1].v);
+  });
+  if(ck.length) h+='<h2 style="font-size:13px;margin:14px 0 6px">'+
+    t("نمودار شاخص‌های حیاتی و مقادیر غیرطبیعی","Vital markers & abnormal values")+'</h2>';
+  h+='<div class="pcharts">'+ck.map(function(k){
+    var m=D.tests[k];
+    return '<div class="card"><h3><span>'+esc(t(m.fa,m.en))+'</span><span>'+esc(dUnit(k)||"")+'</span></h3>'+spark(k)+'</div>';
+  }).join("")+'</div>';
+  VIS=saved;
+  h+='<div class="pfoot">'+t("خروجی از پرونده شخصی (PDLF) — ابزار ثبت و نمایش است، نه تشخیص. بازه‌های مرجع: استاندارد بین‌المللی یا بازهٔ چاپ‌شدهٔ آزمایشگاه.",
+      "Exported from a personal record (PDLF) — a record-keeping tool, not a diagnosis. Reference ranges: international standard or the lab's printed range.")+'</div>';
+  pv.innerHTML=h;
+  document.body.classList.add("printing");
+}
+/* one call, every platform: Android WebView has no window.print (native bridge → system print, Save as PDF / share);
+   Tauri uses the WebView2 print dialog (Microsoft Print to PDF); browsers/PWA use window.print(). */
+function doPrint(){
+  buildPrintView();
+  var title="PDLF "+t(D.patient.fa,D.patient.en)+" "+new Date().toISOString().slice(0,10), old=document.title;
+  document.title=title;                                   // becomes the suggested PDF file name
+  setTimeout(function(){ document.title=old; }, 4000);
+  if(window.PDLFNative && window.PDLFNative.print) return window.PDLFNative.print(title);
+  var T=window.__TAURI__;
+  if(T && T.core && T.core.invoke) return T.core.invoke("print_page").catch(function(){ window.print(); });
+  window.print();
+}
+/* also handle Ctrl+P / browser menu print: fill the print view just-in-time */
+window.addEventListener("beforeprint", buildPrintView);
+window.addEventListener("afterprint", function(){
+  document.body.classList.remove("printing");
+  var pv=document.getElementById("printview"); if(pv) pv.innerHTML="";
+});
+
 /* ================= backup / restore =================
    v3 format. One patient:  {v:3,pid,patient:{identity},additions,notes,nextTest,radiology,meds}
    All patients:           {v:3,all:true,patients:[{patient,additions,notes,nextTest,radiology,meds}]}
@@ -4186,7 +4503,7 @@ document.getElementById("io-load").onclick=function(){
                  "This backup belongs to another patient ("+d.pid+"). Load it onto “"+t(D.patient.fa,D.patient.en)+"” anyway?")))
       return;
   }
-  if((additions.length || Object.keys(notes).length || nextTest || radAdds.length || medAdds.length || pathAdds.length || conditions.length) &&
+  if((additions.length || Object.keys(notes).length || nextTest || radAdds.length || medAdds.length || bpAdds.length || gluAdds.length || pathAdds.length || conditions.length) &&
      !confirm(t("داده‌های اضافه‌شدهٔ فعلی این بیمار (نتایج، یادداشت‌ها، یادآور) جایگزین می‌شوند. ادامه؟",
                "This patient's current added data (results, notes, reminder) will be replaced. Continue?")))
     return;
@@ -4210,7 +4527,7 @@ document.getElementById("foot").textContent =
 
 /* ---- reminder card on the overview + local auto-backup ---- */
 function bumpBackupTime(){ LS.set(pk("backupAt"), String(Date.now())); }
-function hasUserData(){ return !!(additions.length || radAdds.length || medAdds.length || pathAdds.length || conditions.length || allergies.length || history_ || Object.keys(notes).length || custom.length); }
+function hasUserData(){ return !!(additions.length || radAdds.length || medAdds.length || bpAdds.length || gluAdds.length || pathAdds.length || conditions.length || allergies.length || history_ || Object.keys(notes).length || custom.length); }
 function renderBackupCard(){
   var el=document.getElementById("sum-backup"); if(!el) return;
   var at=+(LS.get(pk("backupAt"))||0);
