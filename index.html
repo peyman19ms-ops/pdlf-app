@@ -1367,8 +1367,11 @@ input.vit-big{width:92px; font-size:1.35rem; font-weight:700; text-align:center;
 <script>/* liquid-fx.js -- liquid-in-a-glass buttons and liquid-tube progress bars.
    No dependencies. Canvas + a tiny spring simulation.
 
-     LiquidFX.glass(buttonEl, { color, level: 0.44, hoverRise: 0.14 })
-     LiquidFX.tube(barEl,     { color, value: () => 0..1 })   // or .set(v)
+     LiquidFX.glass(buttonEl, { color, level: 0.44, hoverRise: 0.14, highlight: "255,255,255" })
+     LiquidFX.tube(barEl,     { color, value: () => 0..1, highlight: "255,255,255" })   // or .set(v)
+
+   highlight: an "r,g,b" triplet for the surface sheen / travelling glints (default white).
+   A warm gold ("217,180,106") over a jewel-tone body colour reads as a premium/luxury duotone.
 
    glass: the button holds liquid ~half full; the surface always ripples,
           tilts with mouse movement over it and with the window being
@@ -1390,6 +1393,7 @@ input.vit-big{width:92px; font-size:1.35rem; font-weight:700; text-align:center;
     const v = getComputedStyle(el).getPropertyValue('--accent').trim();
     return v || fallback || '#5546d8';
   };
+  const hlRGB = (o) => o.highlight || '255,255,255';   // surface sheen / glints colour, as an "r,g,b" triplet
   const fit = (c) => {
     const r = c.getBoundingClientRect(), d = window.devicePixelRatio || 1;
     const w = Math.max(1, Math.round(r.width * d)), h = Math.max(1, Math.round(r.height * d));
@@ -1476,7 +1480,7 @@ input.vit-big{width:92px; font-size:1.35rem; font-weight:700; text-align:center;
         }
         g.globalAlpha = 1; g.beginPath();
         for (let x = 0; x <= w; x += 2 * d) { const y = surf(s, x, w, h, lv, amp, ts); x ? g.lineTo(x, y) : g.moveTo(x, y); }
-        g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 1.4 * d; g.stroke();
+        g.strokeStyle = 'rgba(' + hlRGB(o) + ',.7)'; g.lineWidth = 1.4 * d; g.stroke();
       },
       destroy() { off.forEach((f) => f()); c.remove(); vessels.delete(v); },
     };
@@ -1508,9 +1512,9 @@ input.vit-big{width:92px; font-size:1.35rem; font-weight:700; text-align:center;
         g.closePath();
         g.fillStyle = colour; g.globalAlpha = 0.9; g.fill();
         const hl = g.createLinearGradient(0, 0, 0, h);
-        hl.addColorStop(0, 'rgba(255,255,255,.45)'); hl.addColorStop(0.45, 'rgba(255,255,255,0)');
+        hl.addColorStop(0, 'rgba(' + hlRGB(opts) + ',.45)'); hl.addColorStop(0.45, 'rgba(' + hlRGB(opts) + ',0)');
         g.globalAlpha = 1; g.fillStyle = hl; g.fill();
-        g.fillStyle = 'rgba(255,255,255,.55)';
+        g.fillStyle = 'rgba(' + hlRGB(opts) + ',.55)';
         for (let i = 0; i < 3; i++) {
           const gx = (s.phase * 40 * d + i * w / 3) % Math.max(1, xe);
           g.beginPath(); g.ellipse(gx, h * 0.42, 6 * d, 1.3 * d, 0, 0, 6.3); g.fill();
@@ -3459,7 +3463,7 @@ function renderScore(){
         "Limitation of this provisional version: being an average, one serious problem in one system (e.g. high LDL) is diluted by the normal ones. The final model (clinical weight per test, 5 bands, syndrome patterns) fixes this. Not a validated clinical index or treatment advice."))+'</p></details>';
   var arc=el.querySelector(".ring-arc");
   if(arc) requestAnimationFrame(function(){ requestAnimationFrame(function(){ arc.setAttribute("stroke-dashoffset", arc.getAttribute("data-off")); }); });
-  if(window.LiquidFX) xpTube=LiquidFX.tube(document.getElementById("xp-bar"), {value:function(){ return lv.xpPct/100; }});
+  if(window.LiquidFX) xpTube=LiquidFX.tube(document.getElementById("xp-bar"), {value:function(){ return lv.xpPct/100; }, highlight:liquidGold()});
   el.querySelectorAll("[data-q]").forEach(function(b){
     var q=G.quests[+b.getAttribute("data-q")];
     b.onclick=function(){
@@ -4965,17 +4969,24 @@ window.INBOX_APPLY = inboxApply;   // test seam: the merge path the Android inbo
 window.PERSONAL_PROBE = function(){ return EMB_KEYS.length; };   // test seam: number of embedded keys
 
 /* ---------- liquid-glass primary buttons (vendor/liquid-fx.js) ----------
-   Ocean Breeze accent (reads --accent automatically, no colour hardcoded here).
+   Body colour = Ocean Breeze --accent (teal, read automatically); the surface sheen and
+   glints are a warm champagne gold instead of the library's default white -- teal+gold is
+   a well-worn "luxury" duotone and it doesn't fight the rest of the teal UI. Same gold is
+   used for the XP tube (47-score.js).
    applyLang() replaces each button's textContent on every language toggle / patient
    switch / backup restore, which would otherwise wipe the injected canvas — so this
    re-attaches every time applyLang() runs (see the call at its end, 32-lang.js), which
    also covers first boot (90-init.js's initial renderAll() calls applyLang()). */
+/* also used by 47-score.js's XP tube -- inlined in both places, not a shared `var`, because a `var` initializer
+   only runs when this file's own top-level code is reached, which is too late for the first boot-time render
+   (renderScore() already runs once during 90-init.js's initial renderAll(), before file 91 loads). */
+function liquidGold(){ return "217,180,106"; }
 var liquidBtns;                 // populated lazily -- applyLang() can call this before this file's own top-level code runs
 function applyLiquidButtons(){
   if(!window.LiquidFX) return;
   (liquidBtns||[]).forEach(function(h){ h.destroy(); });
   liquidBtns=[];
-  document.querySelectorAll(".btn.primary").forEach(function(b){ liquidBtns.push(LiquidFX.glass(b)); });
+  document.querySelectorAll(".btn.primary").forEach(function(b){ liquidBtns.push(LiquidFX.glass(b, {highlight:liquidGold()})); });
 }
 
 })();
