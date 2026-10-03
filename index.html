@@ -714,6 +714,62 @@ dialog#ing::backdrop{background:rgba(8,16,18,.55)}
 dialog#ing[open]{animation:lc-pop .22s cubic-bezier(.2,.9,.3,1.2) both}
 #ing textarea{width:100%; border:1px solid var(--line); background:var(--surface-2); color:var(--ink); border-radius:8px; padding:8px; font:inherit; font-size:.85rem}
 
+/* ===== mobile shell: slim header + info cards on top, thumb-reach tab bar at the bottom ===== */
+.bnav,.msheet,#toolsBtn{display:none}
+@media (max-width:760px){
+  .tabs{display:none}
+  main{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+  footer{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+  .top{display:grid; grid-template-columns:1fr auto; align-items:center; gap:10px 8px; padding:6px 12px 10px}
+  .brand{min-width:0; grid-row:1; grid-column:1}
+  .hbtns{display:flex; flex-wrap:wrap; justify-content:flex-end; gap:6px; grid-row:1; grid-column:2}
+  .hbtns .iconbtn{width:36px; height:36px; padding:0; border-radius:12px; display:grid; place-items:center; font-size:.85rem}
+  .hbtns #pAddBtn,.hbtns #pEditBtn,.hbtns #fsBtn{display:none}
+  .hbtns.open{grid-row:3; grid-column:1/-1; width:100%}
+  .hbtns.open #pEditBtn,.hbtns.open #fsBtn{display:grid}
+  .hbtns.open #pAddBtn:not([hidden]){display:grid}
+  #toolsBtn{display:grid}
+  .chips{grid-row:2; grid-column:1/-1; order:0; display:grid; grid-template-columns:repeat(4,1fr); gap:8px; overflow:visible}
+  .chip{display:flex; flex-direction:column; align-items:center; gap:0; padding:7px 4px; border:none; border-radius:14px;
+        background:var(--surface-2); box-shadow:var(--shadow-sm); font-size:.62rem; white-space:normal; text-align:center; min-width:0}
+  .chip b{font-size:.9rem; line-height:1.35; color:var(--accent)}
+  .chip small{font-size:.62rem; color:var(--muted)}
+
+  .bnav{
+    display:grid; grid-template-columns:repeat(5,1fr); align-items:end; position:fixed; z-index:40;
+    inset:auto 0 0 0; padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+    background:color-mix(in srgb,var(--surface) 88%,transparent);
+    -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px); box-shadow:0 -6px 22px rgba(0,0,0,.18);
+  }
+  .bn{
+    display:flex; flex-direction:column; align-items:center; gap:2px; border:none; background:transparent;
+    color:var(--muted); font:inherit; font-size:.64rem; font-weight:600; padding:6px 0 2px; cursor:pointer;
+    -webkit-tap-highlight-color:transparent; transition:transform .1s, color .15s;
+  }
+  .bn:active{transform:scale(.9)}
+  .bn svg,.msheet svg{width:24px; height:24px; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round}
+  .bn[aria-selected="true"]{color:var(--accent)}
+  .bn[aria-selected="true"] svg{stroke-width:2.4}
+  .bn-add svg{width:30px; height:30px; padding:7px; border-radius:50%; margin-top:-14px; stroke:var(--on-accent);
+    background:linear-gradient(135deg,var(--accent),var(--accent-2)); box-shadow:0 5px 14px rgba(0,0,0,.28)}
+  .bn-add[aria-selected="true"]{color:var(--accent)}
+
+  .msheet:not([hidden]){display:block; position:fixed; inset:0; z-index:39; background:rgba(0,0,0,.35)}
+  .msheet-grid{
+    position:absolute; inset-inline:12px; bottom:calc(78px + env(safe-area-inset-bottom));
+    display:grid; grid-template-columns:repeat(3,1fr); gap:8px; padding:12px; border-radius:22px;
+    background:var(--surface); box-shadow:var(--shadow-lg);
+  }
+  .msheet-grid button{
+    display:flex; flex-direction:column; align-items:center; gap:4px; padding:12px 4px; border:none; border-radius:16px;
+    background:var(--surface-2); color:var(--ink); font:inherit; font-size:.74rem; font-weight:600; cursor:pointer;
+    box-shadow:var(--shadow-sm);
+  }
+  .msheet-grid button[aria-selected="true"]{color:var(--accent)}
+}
+@media print{.bnav,.msheet{display:none !important}}
+html[data-shell="tauri"] .bnav,html[data-shell="tauri"] .msheet{display:none !important}
+
 /* =====================================================================
    OCEAN BREEZE palette (user-supplied): #0B3D91 primary · #3BA7F2 secondary · #7FE7D6 tertiary · #E8F6FF background
    Neumorphic surfaces + colour on the important parts. Semantic colours (--hi red, --lo blue) are unchanged.
@@ -908,6 +964,7 @@ input.vit-big{width:92px; font-size:1.35rem; font-weight:700; text-align:center;
   </div>
   <div class="chips" id="chips"></div>
   <div class="hbtns">
+    <button class="iconbtn tap" id="toolsBtn" aria-label="tools" aria-expanded="false">⋯</button>
     <button class="iconbtn tap" id="pAddBtn" hidden title="افزودن بیمار" aria-label="add patient">＋</button>
     <button class="iconbtn tap" id="pEditBtn" title="مشخصات بیمار" aria-label="edit patient">✎</button>
     <button class="iconbtn tap" id="fsBtn" title="اندازهٔ متن" aria-label="text size">Aa</button>
@@ -1336,6 +1393,23 @@ input.vit-big{width:92px; font-size:1.35rem; font-weight:700; text-align:center;
 
   <footer id="foot"></footer>
 </main>
+<nav class="bnav" id="bnav">
+  <button class="bn" data-tab="sum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg><span data-fa="خلاصه" data-en="Home"></span></button>
+  <button class="bn" data-tab="table"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg><span data-fa="جدول" data-en="Table"></span></button>
+  <button class="bn bn-add" data-tab="add"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-fa="افزودن" data-en="Add"></span></button>
+  <button class="bn" data-tab="charts"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h16M8 15l3-4 3 2 5-7"/></svg><span data-fa="نمودار" data-en="Charts"></span></button>
+  <button class="bn" id="bnMore" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg><span data-fa="بیشتر" data-en="More"></span></button>
+</nav>
+<div class="msheet" id="msheet" hidden>
+  <div class="msheet-grid">
+    <button data-tab="prof"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg><span data-fa="پرونده" data-en="Profile"></span></button>
+    <button data-tab="rad"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="12" r="4"/></svg><span data-fa="رادیولوژی" data-en="Imaging"></span></button>
+    <button data-tab="meds"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-45 12 12)"/><path d="M9.5 9.5l5 5"/></svg><span data-fa="داروها" data-en="Medications"></span></button>
+    <button data-tab="vit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg><span data-fa="فشار و قند" data-en="BP & glucose"></span></button>
+    <button data-tab="path"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3h6M10 3v6l-5 10a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-10V3"/></svg><span data-fa="پاتولوژی" data-en="Pathology"></span></button>
+  </div>
+</div>
+
 
 <dialog id="big">
   <div class="big-wrap">
@@ -2589,12 +2663,12 @@ function renderChips(){
   var labN = D.reports.length, pN = D.pathology.length;
   var c=document.getElementById("chips");
   c.innerHTML =
-    chip(t("بازه","Span"), (first?first.j:"")+" – "+(last?last.j:"")) +
+    chip(t("بازه","Span"), (first?first.j.slice(0,4):"")+"–"+(last?last.j.slice(0,4):"")) +
     chip(t("برگه‌ها","Reports"), n+ (n>labN?(" ("+labN+"+"+(n-labN)+")"):"")) +
     chip(t("پاتولوژی","Pathology"), pN) +
     chip(t("سن امروز","Age today"), (ageNow()!=null ? ageNow() : (last&&last.age? last.age : "—")));
 }
-function chip(k,v){ return '<span class="chip">'+esc(k)+' <b class="num">'+esc(v)+'</b></span>'; }
+function chip(k,v){ return '<span class="chip"><small>'+esc(k)+'</small> <b class="num">'+esc(v)+'</b></span>'; }
 
 
 /* ---------- table ---------- */
@@ -3574,11 +3648,15 @@ document.getElementById("ct-add").onclick=function(){
 
 /* ---------- tabs & wiring ---------- */
 function showTab(name){
-  document.querySelectorAll(".tab").forEach(function(b){
+  document.querySelectorAll("[data-tab]").forEach(function(b){
     b.setAttribute("aria-selected", b.getAttribute("data-tab")===name); });
   document.querySelectorAll(".panel").forEach(function(p){
     p.classList.toggle("on", p.id==="p-"+name); });
   LS.set("lab.tab", name);
+  var more=document.getElementById("bnMore");
+  more.setAttribute("aria-selected", !!document.querySelector('#msheet [data-tab="'+name+'"]'));
+  document.getElementById("msheet").hidden=true; more.setAttribute("aria-expanded","false");
+  window.scrollTo(0,0);
   if(name==="charts") renderCharts();
   if(name==="sum") renderSummary();
   if(name==="rad") renderRad();
@@ -3603,6 +3681,17 @@ document.getElementById("langBtn").onclick=function(){
 document.getElementById("tabs").addEventListener("click",function(e){
   var b=e.target.closest(".tab"); if(b) showTab(b.getAttribute("data-tab"));
 });
+document.getElementById("bnav").addEventListener("click",function(e){
+  var b=e.target.closest(".bn"); if(!b) return;
+  if(b.id==="bnMore"){ var sh=document.getElementById("msheet"); sh.hidden=!sh.hidden; b.setAttribute("aria-expanded",!sh.hidden); }
+  else showTab(b.getAttribute("data-tab"));
+});
+document.getElementById("msheet").addEventListener("click",function(e){
+  var b=e.target.closest("[data-tab]"); if(b) showTab(b.getAttribute("data-tab")); else this.hidden=true;   // tap outside the grid closes
+});
+document.getElementById("toolsBtn").onclick=function(){
+  var h=document.querySelector(".hbtns"); h.classList.toggle("open"); this.setAttribute("aria-expanded",h.classList.contains("open"));
+};
 document.getElementById("search").addEventListener("input", renderTable);
 document.getElementById("abn").addEventListener("change", renderTable);
 document.getElementById("orderBtn").onclick=function(){ order=order==="desc"?"asc":"desc"; renderTable(); };
