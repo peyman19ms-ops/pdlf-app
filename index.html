@@ -787,6 +787,10 @@ body.pvscreen #printview{display:block; position:fixed; inset:0; z-index:100; ov
 #printview .para{line-height:1.7}
 .report .dx{display:flex; gap:8px; align-items:flex-start}
 .dxt{flex:1; min-width:0}
+@media (max-width:760px){
+  .head.fold .chips,.head.fold .hbtns{display:none}
+  .head.fold .top{padding-bottom:6px}
+}
 
 /* =====================================================================
    OCEAN BREEZE palette (user-supplied): #0B3D91 primary · #3BA7F2 secondary · #7FE7D6 tertiary · #E8F6FF background
@@ -3770,6 +3774,15 @@ document.getElementById("f-add").onclick=function(){
 document.getElementById("f-j").addEventListener("blur",function(){
   var gi=document.getElementById("f-g"); if(!gi.value){ var x=jStrToG(this.value); if(x) gi.value=x; }
 });
+/* mobile: the sticky header folds to one row while scrolling down (hysteresis avoids flicker when the height change moves scrollY) */
+(function(){
+  var head=document.querySelector(".head"), folded=false;
+  window.addEventListener("scroll",function(){
+    var y=window.scrollY;
+    if(!folded && y>140){ folded=true; head.classList.add("fold"); }
+    else if(folded && y<30){ folded=false; head.classList.remove("fold"); }
+  },{passive:true});
+})();
 
 /* ---------- home monitoring: blood pressure + glucose meter ----------
    bp item:  {id,g,j,sys,dia,pulse,note,src:"manual"}
