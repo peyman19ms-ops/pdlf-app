@@ -770,6 +770,24 @@ dialog#ing[open]{animation:lc-pop .22s cubic-bezier(.2,.9,.3,1.2) both}
 @media print{.bnav,.msheet{display:none !important}}
 html[data-shell="tauri"] .bnav,html[data-shell="tauri"] .msheet{display:none !important}
 
+body.pvscreen #printview{display:block; position:fixed; inset:0; z-index:100; overflow:auto; -webkit-overflow-scrolling:touch;
+  padding:calc(58px + env(safe-area-inset-top)) 14px 40px}
+.pvbar{position:fixed; top:0; inset-inline:0; z-index:101; display:flex; gap:8px; padding:calc(8px + env(safe-area-inset-top)) 12px 8px; background:#f1f3f5; border-bottom:1px solid #ccc}
+.pvbar button{flex:1; border:none; border-radius:10px; padding:10px 6px; font:inherit; font-size:.85rem; font-weight:700; background:#fff; color:#0b3d91; box-shadow:0 1px 3px rgba(0,0,0,.2)}
+@media print{.pvbar{display:none}}
+
+/* report text: label above, paragraphs below, each aligned by its own script */
+.para{margin:0 0 .55em; line-height:1.9; text-align:start; unicode-bidi:plaintext; overflow-wrap:anywhere}
+.para:last-child{margin-bottom:0}
+.rrow{margin:12px 0}
+.rrow .k{display:block; font-size:.74rem; font-weight:700; color:var(--muted); margin-bottom:3px; letter-spacing:.02em}
+.report h3,.report .meta{unicode-bidi:plaintext; text-align:start}
+.report .dx .para{font-weight:600}
+.msub .para{font-weight:400}
+#printview .para{line-height:1.7}
+.report .dx{display:flex; gap:8px; align-items:flex-start}
+.dxt{flex:1; min-width:0}
+
 /* =====================================================================
    OCEAN BREEZE palette (user-supplied): #0B3D91 primary · #3BA7F2 secondary · #7FE7D6 tertiary · #E8F6FF background
    Neumorphic surfaces + colour on the important parts. Semantic colours (--hi red, --lo blue) are unchanged.
@@ -2465,6 +2483,13 @@ function t(fa,en){ return lang==="fa"?fa:en; }
 function tn(v){ return (v==null||v==="")?"":String(v); }
 function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){
   return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+/* free text -> paragraphs: blank line = new paragraph, single newline = line break; dir="auto" so each paragraph
+   aligns/flows by its own script (Persian right-to-left, English left-to-right) */
+function paras(v){
+  return String(v==null?"":v).split(/\n\s*\n/).map(function(x){ return x.trim(); }).filter(Boolean).map(function(x){
+    return '<div class="para" dir="auto">'+esc(x).replace(/\n/g,"<br>")+'</div>'; }).join("");
+}
+function ml(v){ return esc(v).replace(/\n+/g," · "); }       // one-line variant (print lists)
 function panelOn(name){
   var p=document.getElementById("p-"+name); return !!p && p.classList.contains("on");
 }
@@ -2899,14 +2924,14 @@ function renderPath(){
   fuOptions("path");
   var list=pathAll();
   if(!list.length){ w.innerHTML='<p class="hint" data-fa="هنوز گزارش پاتولوژی‌ای ثبت نشده." data-en="No pathology reports yet."></p>'; localizeIn(w); return; }
-  function row(k,v){ return v?'<p><span class="k">'+esc(k)+': </span>'+esc(v)+'</p>':''; }
+  function row(k,v){ return v?'<div class="rrow"><span class="k">'+esc(k)+'</span>'+paras(v)+'</div>':''; }
   w.innerHTML=list.map(function(p){
     var f=p._mine ? p.followUp : PLF.followup.apply({followUp:{done:!!fuDone["path:"+p._key]}}, p._dxText||p.diagnosis).followUp;
     return '<div class="report" id="rec-path-'+esc(p._key)+'"><div class="meta num">'+esc(faDigits(p.j||""))+(p.g?'  ·  '+esc(p.g):'')+
       (p.age!=null&&p.age!==""?'  ·  '+t("سن","age")+" "+esc(p.age):'')+(p.center?'  ·  '+esc(p.center):'')+(p.dr?'  ·  '+esc(p.dr):'')+'</div>'+
       '<h3>'+esc(p.specimen||"")+'</h3>'+
       row(t("شرح بالینی","Clinical"),p.clinical)+row(t("ماکروسکوپی","Gross"),p.gross)+
-      (p.diagnosis?'<div class="dx">'+fuDot(f&&f.level)+esc(p.diagnosis)+'</div>':'')+
+      (p.diagnosis?'<div class="dx">'+fuDot(f&&f.level)+"<div class=\"dxt\">"+paras(p.diagnosis)+"</div>"+'</div>':'')+
       row(t("میکروسکوپی","Microscopic"),p.micro)+
       fuLine({followUp:f})+
       (p.file?'<p class="src">'+esc(p.file)+'</p>':'')+
@@ -2982,7 +3007,7 @@ function radMatches(r){
   if(!q) return true;
   return [r.modality,r.region,r.center,r.dr,r.refDr,r.indication,r.findings,r.impression,r.reportNo,r.j,r.g].join(" ").toLowerCase().indexOf(q)>=0;
 }
-function radRow(k,v){ return v?'<p><span class="k">'+esc(k)+': </span>'+esc(v)+'</p>':''; }
+function radRow(k,v){ return v?'<div class="rrow"><span class="k">'+esc(k)+'</span>'+paras(v)+'</div>':''; }
 function renderRad(){
   var w=document.getElementById("radWrap"); if(!w) return;
   radOptions(); fuOptions("rad");
@@ -3000,7 +3025,7 @@ function renderRad(){
       radRow(t("علت درخواست","Indication"),r.indication)+
       (cx&&cx[0]?radRow(t("کنتراست","Contrast"),t(cx[0],cx[1])):'')+
       radRow(t("یافته‌ها","Findings"),r.findings)+
-      (r.impression?'<div class="dx">'+fuDot(r.followUp&&r.followUp.level)+esc(r.impression)+'</div>':'')+
+      (r.impression?'<div class="dx">'+fuDot(r.followUp&&r.followUp.level)+"<div class=\"dxt\">"+paras(r.impression)+"</div>"+'</div>':'')+
       radRow(t("مقایسه با قبلی","Comparison"),r.comparison)+
       radRow(t("پیگیری / توصیه","Follow-up"),r.followup)+(r.followUp?fuLine(r):'')+
       ''+
@@ -3117,7 +3142,7 @@ function renderMeds(){
         (dur?' ('+esc(dur)+')':'')+
         (m.dr?'  ·  '+esc(m.dr):'')+
         (m.reason?'  ·  '+esc(m.reason):'')+'</div>'+
-      (m.note?'<div class="msub">'+esc(m.note)+'</div>':'')+
+      (m.note?'<div class="msub">'+paras(m.note)+'</div>':'')+
       (m._mine?'<div class="mact">'+
         '<button data-medtog="'+m._idx+'">'+(off?t("فعال کن","Reactivate"):t("قطع کردن","Stop"))+'</button>'+
         '<button data-mededit="'+m._idx+'" data-fa="ویرایش" data-en="Edit"></button>'+
@@ -4592,9 +4617,9 @@ function buildPrintView(){
         var ctxLbl=GLU_CTX.filter(function(c){ return c[0]===m.ctx; })[0];
         return esc(faDigits(m.j||""))+' — <b>'+esc(m.val)+' mg/dL</b>'+(ctxLbl?' ('+esc(t(ctxLbl[0],ctxLbl[1]))+')':''); }));
   h+=pSection(t("پاتولوژی","Pathology"), pathAll().map(function(p){
-      return esc(p.j||"")+' — '+esc(p.specimen||"")+': <b>'+esc(p.diagnosis||"")+'</b>'; }));
+      return esc(p.j||"")+' — '+esc(p.specimen||"")+': <b>'+ml(p.diagnosis||"")+'</b>'; }));
   h+=pSection(t("تصویربرداری","Imaging"), radAll().map(function(r){
-      return esc(r.j||"")+' — '+esc([r.modality,r.region].filter(Boolean).join(" "))+(r.impression?': <b>'+esc(r.impression)+'</b>':''); }));
+      return esc(r.j||"")+' — '+esc([r.modality,r.region].filter(Boolean).join(" "))+(r.impression?': <b>'+ml(r.impression)+'</b>':''); }));
   if(!last){ pv.innerHTML=h; document.body.classList.add("printing"); return; }
   var keys=activeTestKeys();
   var byCat={}; keys.forEach(function(k){ (byCat[D.tests[k].cat]=byCat[D.tests[k].cat]||[]).push(k); });
@@ -4654,12 +4679,37 @@ function doPrint(){
   if(window.PDLFNative && window.PDLFNative.print) return window.PDLFNative.print(title);
   var T=window.__TAURI__;
   if(T && T.core && T.core.invoke) return T.core.invoke("print_page").catch(function(){ window.print(); });
+  if(IS_IOS) return showPrintScreen(title);
   window.print();
+}
+/* iOS (esp. the home-screen PWA) ignores window.print(): show the report on screen instead, with
+   Print (works in a Safari tab), Share (a self-contained .html -> Files / AirDrop / Safari -> Print -> PDF) and Close. */
+var IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform==="MacIntel" && navigator.maxTouchPoints>1);
+function showPrintScreen(title){
+  var pv=document.getElementById("printview");
+  var bar=document.createElement("div"); bar.className="pvbar";
+  bar.innerHTML='<button type="button" data-a="close">'+t("بستن","Close")+'</button>'+
+    '<button type="button" data-a="share">'+t("اشتراک / ذخیره فایل","Share / save file")+'</button>'+
+    '<button type="button" data-a="print">'+t("چاپ","Print")+'</button>';
+  pv.insertBefore(bar,pv.firstChild);
+  document.body.classList.add("pvscreen");
+  bar.onclick=function(e){
+    var a=e.target.getAttribute("data-a"); if(!a) return;
+    if(a==="print") return window.print();
+    if(a==="close"){ document.body.classList.remove("pvscreen","printing"); pv.innerHTML=""; return; }
+    bar.remove();
+    var html='<!doctype html><html lang="'+lang+'" dir="'+(lang==="fa"?"rtl":"ltr")+'"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title)+'</title><style>'+
+      document.querySelector("style").textContent+'#printview{display:block!important}</style><body class="printing"><div id="printview">'+pv.innerHTML+'</div>';
+    pv.insertBefore(bar,pv.firstChild);
+    var f=new File([html], title.replace(/[^\w؀-ۿ-]+/g,"_")+".html", {type:"text/html"});
+    if(navigator.canShare && navigator.canShare({files:[f]})) navigator.share({files:[f], title:title}).catch(function(){});
+    else toast(t("اشتراک‌گذاری فایل در این مرورگر ممکن نیست","File sharing is not available here"));
+  };
 }
 /* also handle Ctrl+P / browser menu print: fill the print view just-in-time */
 window.addEventListener("beforeprint", buildPrintView);
 window.addEventListener("afterprint", function(){
-  document.body.classList.remove("printing");
+  document.body.classList.remove("printing","pvscreen");
   var pv=document.getElementById("printview"); if(pv) pv.innerHTML="";
 });
 
