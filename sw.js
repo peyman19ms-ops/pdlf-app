@@ -1,4 +1,4 @@
-const C = "labchart-864d8421a5";
+const C = "labchart-a239ed8fee";
 const SHELL = ["./","./index.html","./manifest.webmanifest",
   "./icons/icon-192.png","./icons/icon-512.png","./icons/icon-180.png"];
 self.addEventListener("install", e => {
